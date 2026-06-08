@@ -1,98 +1,157 @@
 # LiveKick 2026
 
-LiveKick 2026 est une application web fullstack de suivi intelligent de la Coupe du Monde FIFA 2026.
+LiveKick 2026 est une application web fullstack dediee au suivi de la Coupe du Monde FIFA 2026.
 
-Le projet vise a proposer une experience sportive moderne combinant consultation des matchs, suivi live, personnalisation utilisateur, administration des donnees football et analyses predictives assistees par IA.
+L'objectif est de proposer une plateforme claire, moderne et responsive pour consulter les matchs, suivre le live, afficher les groupes, gerer des favoris et afficher des predictions explicables.
 
-## Objectifs produit
+## Fonctionnalites cible
 
-- Consulter les matchs par phase, groupe, equipe et statut.
-- Suivre les scores, minutes et evenements importants en temps reel.
-- Afficher les groupes, classements, equipes, joueurs et stades.
-- Permettre aux utilisateurs connectes de gerer favoris, preferences et notifications.
-- Fournir des predictions IA explicables sur les matchs.
-- Proposer un back-office securise pour administrer les donnees metier.
+- Calendrier et liste des matchs.
+- Detail d'un match avec score, statut, minute et evenements.
+- Groupes, classements, equipes, joueurs et stades.
+- Authentification utilisateur.
+- Favoris, preferences et notifications.
+- Predictions de match via un service analytique dedie.
+- Administration des donnees football.
 
 ## Architecture
 
-LiveKick suit une architecture client/serveur decouplee.
+Le projet est decoupe en plusieurs applications :
 
-- `frontend` : interface React + TypeScript.
-- `backend` : API metier Spring Boot.
-- `ai-service` : service analytique IA cible, expose par FastAPI.
-- `docs` : documentation technique, API, decisions et contexte IA.
-- `infra` : scripts et configuration d'infrastructure cible.
-- `ops` : elements d'exploitation, monitoring et runbooks cible.
+```text
+frontend React
+  -> backend Spring Boot
+      -> PostgreSQL
+      -> service IA FastAPI
+```
 
-Principe central : le frontend ne dialogue jamais directement avec la base de donnees, l'API football externe ou le service IA. Toutes les integrations passent par le backend.
+Le backend est le point central. Le frontend ne contacte jamais directement la base de donnees ni le service IA.
 
-## Stack actuelle
+## Stack technique
 
-### Frontend
+| Domaine | Technologie |
+| --- | --- |
+| Frontend | React + TypeScript + Vite |
+| Backend | Spring Boot + Java 21 |
+| Base de donnees | PostgreSQL |
+| Migrations | Flyway |
+| Securite | Spring Security + JWT |
+| API | REST / JSON |
+| Live | WebSocket + polling |
+| IA | FastAPI |
+| Conteneurisation | Docker / Docker Compose |
 
-- React 19
-- TypeScript 6
-- Vite 8
-- React Router 7
-- Zustand 5
-- Axios
-- ESLint
-- Vitest + Testing Library
+## Structure du projet
 
-### Backend
+```text
+live-kick/
+  frontend/      Interface utilisateur React
+  backend/       API metier Spring Boot
+  ai-service/    Service analytique pour les predictions
+  infra/         Configuration Docker / Nginx
+  docs/          Documentation projet
+  ops/           Elements d'exploitation
+```
 
-- Java 21
-- Spring Boot 3.5
-- Spring Web
-- Spring Security
-- Spring Data JPA
-- Spring Validation
-- Flyway
-- PostgreSQL Driver
-- Lombok
-- Actuator
-- Maven
+## Demarrage rapide
 
-### Donnees et infrastructure cible
+### 1. Lancer PostgreSQL et Redis
 
-- PostgreSQL 16+
-- Redis pour cache/live si necessaire
-- Docker et Docker Compose
-- Swagger/OpenAPI pour documentation API
-- FastAPI pour le service IA cible
+```powershell
+docker compose up -d postgres redis
+```
 
-## Conventions essentielles
+### 2. Lancer le backend
 
-- PostgreSQL : noms en `snake_case`, tables au singulier.
-- Java : classes en `PascalCase`, champs en `camelCase`.
-- TypeScript : types/interfaces en `PascalCase`, proprietes en `camelCase`.
-- API : DTO dedies, validation backend obligatoire, reponses JSON stables.
-- Securite : JWT stateless, RBAC, Spring Security, BCrypt, validation serveur.
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
+```
 
-La reference complete pour l'IA et les developpeurs se trouve dans `docs/ai-context/README.md`.
+Le backend sera disponible sur :
 
-## Commandes utiles
+```text
+http://localhost:8080
+```
 
-### Frontend
+### 3. Lancer le service IA
+
+```powershell
+cd ai-service
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+### 4. Lancer le frontend
 
 ```powershell
 cd frontend
 npm install
 npm run dev
+```
+
+Le frontend sera disponible sur :
+
+```text
+http://localhost:5173
+```
+
+## Lancer toute la stack avec Docker
+
+```powershell
+docker compose --profile app up --build
+```
+
+Cette commande lance :
+
+- PostgreSQL
+- Redis
+- backend
+- frontend
+- service IA
+
+## Points d'entree utiles
+
+| Service | URL |
+| --- | --- |
+| Frontend | `http://localhost:5173` |
+| Backend status | `http://localhost:8080/api/v1/status` |
+| Swagger backend | `http://localhost:8080/swagger-ui.html` |
+| Service IA | `http://localhost:8000/health` |
+
+## Commandes de verification
+
+### Frontend
+
+```powershell
+cd frontend
 npm run build
-npm run lint
 ```
 
 ### Backend
 
 ```powershell
 cd backend
-.\mvnw.cmd spring-boot:run
 .\mvnw.cmd test
 ```
 
-## Regle de coherence
+### Service IA
 
-Avant toute implementation, verifier les documents de contexte IA dans `docs/ai-context`.
+```powershell
+cd ai-service
+python -m compileall app
+```
 
-Si le code contredit le cahier des charges, les diagrammes UML/Merise ou le dictionnaire de donnees, ne pas improviser : aligner le code sur la conception ou documenter clairement la decision d'ecart.
+## Conventions principales
+
+- Les tables PostgreSQL sont en `snake_case` et au singulier.
+- Le code Java et TypeScript utilise des noms en anglais.
+- Les echanges API passent par des DTO.
+- Les mots de passe doivent toujours etre hashes.
+- Les erreurs API doivent rester lisibles et ne pas exposer de details techniques.
+
+## Etat actuel
+
+Le socle technique est initialise. Les developpeurs peuvent maintenant commencer a coder les fonctionnalites metier : authentification, equipes, matchs, groupes, live, favoris, predictions et administration.
