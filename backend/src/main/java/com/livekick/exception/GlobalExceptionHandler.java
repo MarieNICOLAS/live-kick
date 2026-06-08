@@ -28,6 +28,20 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Invalid request payload", request, fields);
     }
 
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiErrorResponse> handleBusinessException(
+            BusinessException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                exception.getStatus(),
+                exception.getError(),
+                exception.getMessage(),
+                request,
+                Map.of()
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpected(Exception exception, HttpServletRequest request) {
         return buildResponse(
