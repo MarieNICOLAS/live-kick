@@ -1,73 +1,78 @@
-# React + TypeScript + Vite
+# Frontend LiveKick
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ce dossier contient l'interface utilisateur de LiveKick 2026.
 
-Currently, two official plugins are available:
+Le frontend est developpe avec React, TypeScript et Vite. Il consomme uniquement l'API du backend Spring Boot.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Role du frontend
 
-## React Compiler
+- Afficher les matchs, scores, groupes, equipes, joueurs et stades.
+- Gerer les pages publiques et les pages utilisateur.
+- Afficher les etats live recus du backend.
+- Appeler les endpoints REST du backend.
+- Afficher les predictions fournies par le backend.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Le frontend ne doit pas appeler directement PostgreSQL, le service IA ou une API football externe.
 
-## Expanding the ESLint configuration
+## Structure actuelle
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+src/
+  App.tsx
+  App.css
+  index.css
+  services/
+    apiClient.ts
+    statusService.ts
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`apiClient.ts` centralise les appels HTTP avec Axios.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+`statusService.ts` contient le premier appel API vers :
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+GET /api/v1/status
 ```
+
+## Installation
+
+```powershell
+cd frontend
+npm install
+```
+
+## Lancer en local
+
+```powershell
+npm run dev
+```
+
+URL locale :
+
+```text
+http://localhost:5173
+```
+
+## Variables d'environnement
+
+Copier `frontend/.env.example` en `frontend/.env` si besoin.
+
+Variable principale :
+
+```text
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+```
+
+## Commandes utiles
+
+```powershell
+npm run build
+npm run lint
+```
+
+## Regles simples
+
+- Garder les types TypeScript en anglais.
+- Passer par `services/apiClient.ts` pour les appels HTTP.
+- Ne pas mettre de logique metier critique dans le frontend.
+- Respecter le style visuel LiveKick, pas le style par defaut Vite.

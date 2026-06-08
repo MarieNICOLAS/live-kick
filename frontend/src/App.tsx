@@ -1,121 +1,77 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
 import './App.css'
+import { getBackendStatus, type BackendStatus } from './services/statusService'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [backendStatus, setBackendStatus] = useState<BackendStatus | null>(null)
+  const [statusState, setStatusState] = useState<'loading' | 'ready' | 'offline'>('loading')
+
+  useEffect(() => {
+    getBackendStatus()
+      .then((status) => {
+        setBackendStatus(status)
+        setStatusState('ready')
+      })
+      .catch(() => {
+        setStatusState('offline')
+      })
+  }, [])
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <main className="app-shell">
+      <header className="top-bar">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
+          <p className="eyebrow">Live football intelligence</p>
+          <h1>LiveKick 2026</h1>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+        <span className={`status-pill status-pill--${statusState}`}>
+          {statusState === 'ready' ? 'Backend online' : statusState === 'offline' ? 'Backend offline' : 'Checking'}
+        </span>
+      </header>
+
+      <section className="scoreboard" aria-label="LiveKick platform status">
+        <article className="metric">
+          <span>Frontend</span>
+          <strong>React TS</strong>
+        </article>
+        <article className="metric">
+          <span>Backend</span>
+          <strong>{backendStatus?.apiVersion ?? 'v1'}</strong>
+        </article>
+        <article className="metric">
+          <span>Database</span>
+          <strong>PostgreSQL</strong>
+        </article>
+        <article className="metric">
+          <span>Live</span>
+          <strong>WebSocket</strong>
+        </article>
       </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <section className="match-strip" aria-label="Match preview">
+        <div className="team-name">Canada</div>
+        <div className="score-block">
+          <span className="live-badge">LIVE</span>
+          <strong>1 - 1</strong>
+          <span>62'</span>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
+        <div className="team-name">Mexico</div>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <section className="foundation-grid">
+        {[
+          ['API', 'REST / JSON'],
+          ['Security', 'JWT + RBAC'],
+          ['AI', backendStatus?.aiServiceBaseUrl ?? 'FastAPI'],
+          ['Cloud', 'Docker ready'],
+        ].map(([label, value]) => (
+          <article className="foundation-item" key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </article>
+        ))}
+      </section>
+    </main>
   )
 }
 
