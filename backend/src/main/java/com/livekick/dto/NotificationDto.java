@@ -4,15 +4,14 @@ import com.livekick.entity.enums.NotificationType;
 
 import java.time.Instant;
 
-public record NotificationDto(
-        Long id,
-        String title,
-        String message,
-        NotificationType notificationType,
-        Boolean isRead,
-        Instant sentAt,
-        Instant readAt,
-        String targetLink,
-        Long userId
-) {
+public class NotificationDto {
+    private Long id;
+    private String title;
+    private String message;
+    private NotificationType notificationType;
+    private Boolean isRead;
+    private Instant sentAt;
+    private Instant readAt;
+    private String targetLink;
+    private Long userId;
 }

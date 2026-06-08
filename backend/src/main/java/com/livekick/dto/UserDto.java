@@ -4,19 +4,31 @@ import com.livekick.entity.enums.UserRole;
 
 import java.time.Instant;
 
-public record UserDto(
-        Long id,
-        String username,
-        String email,
-        Boolean emailVerified,
-        UserRole role,
-        Instant registrationDate,
-        Instant lastLoginDate,
-        Instant deletionDate,
-        String avatarUrl,
-        Boolean isActive,
-        Boolean gdprAccepted,
-        Instant gdprAcceptanceDate,
-        String gdprVersionAccepted
-) {
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserDto {
+    private Long id;
+    private String username;
+    private String email;
+    private Boolean emailVerified;
+    private UserRole role;
+    private Instant registrationDate;
+    private Instant lastLoginDate;
+    private Instant deletionDate;
+    private String avatarUrl;
+    private Boolean isActive;
+    private Boolean gdprAccepted;
+    private Instant gdprAcceptanceDate;
+    private String gdprVersionAccepted;
 }

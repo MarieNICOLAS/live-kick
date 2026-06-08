@@ -1,9 +1,21 @@
 package com.livekick.dto;
 
-public record CompetitionGroupDto(
-        Long id,
-        String name,
-        Integer displayOrder,
-        Long phaseId
-) {
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CompetitionGroupDto {
+    private Long id;
+    private String name;
+    private Integer displayOrder;
+    private Long phaseId;
 }

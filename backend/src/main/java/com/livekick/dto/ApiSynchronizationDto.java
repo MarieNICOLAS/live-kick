@@ -4,13 +4,12 @@ import com.livekick.entity.enums.SynchronizationStatus;
 
 import java.time.Instant;
 
-public record ApiSynchronizationDto(
-        Long id,
-        SynchronizationStatus synchronizationStatus,
-        Instant startedAt,
-        Instant endedAt,
-        String message,
-        Integer recordsProcessed,
-        Long dataSourceId
-) {
+public class ApiSynchronizationDto {
+    private Long id;
+    private SynchronizationStatus synchronizationStatus;
+    private Instant startedAt;
+    private Instant endedAt;
+    private String message;
+    private Integer recordsProcessed;
+    private Long dataSourceId;
 }

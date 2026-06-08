@@ -1,12 +1,24 @@
 package com.livekick.dto;
 
-public record TeamDto(
-        Long id,
-        String name,
-        String fifaCode,
-        String country,
-        String flagUrl,
-        String coachName,
-        Integer worldRanking
-) {
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class TeamDto {
+    private Long id;
+    private String name;
+    private String fifaCode;
+    private String country;
+    private String flagUrl;
+    private String coachName;
+    private Integer worldRanking;
 }
