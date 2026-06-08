@@ -1,6 +1,7 @@
 # IDE
 .idea/
 *.iml
+.vscode/
 
 # OS
 .DS_Store
@@ -12,16 +13,24 @@ Thumbs.db
 # Environment
 .env
 .env.*
+!.env.example
 
 # Backend Java
 backend/target/
 backend/.mvn/
+backend/.mvn/wrapper/maven-wrapper.jar
 
 # Frontend React
 frontend/node_modules/
 frontend/dist/
+frontend/.vite/
 
 # Python
 ai-service/.venv/
+ai-service/venv/
 ai-service/__pycache__/
 ai-service/*.pyc
+ai-service/**/*.pyc
+
+# Docker
+*.pid

@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: livekick-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-livekick}
+      POSTGRES_USER: ${POSTGRES_USER:-livekick}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-livekick}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-livekick} -d ${POSTGRES_DB:-livekick}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: livekick-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    profiles: ["app"]
+    build:
+      context: ./backend
+    container_name: livekick-backend
+    environment:
+      BACKEND_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-livekick}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-livekick}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-livekick}
+      BACKEND_CORS_ALLOWED_ORIGINS: ${BACKEND_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-strong-secret-of-at-least-32-characters}
+      AI_SERVICE_BASE_URL: http://ai-service:8000
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+
+  frontend:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: livekick-frontend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+
+  ai-service:
+    profiles: ["app"]
+    build:
+      context: ./ai-service
+    container_name: livekick-ai-service
+    ports:
+      - "${AI_SERVICE_PORT:-8000}:8000"
+
+volumes:
+  postgres_data:
