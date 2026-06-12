@@ -55,4 +55,13 @@ public class Match {
     @OneToMany(mappedBy = "match")
     @Builder.Default
     private List<CompositionEquipe> compositionsEquipe = new ArrayList<>();
+
+    @ToString.Exclude
+    @OneToMany(mappedBy = "match")
+    @Builder.Default
+    private List<EvenementMatch> evenementsMatch = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stade_id")
+    private Stade stade;
 }
