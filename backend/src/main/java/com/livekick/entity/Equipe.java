@@ -49,4 +49,8 @@ public class Equipe {
     @OneToMany(mappedBy = "equipe")
     @Builder.Default
     private List<CompositionEquipe> compositionsEquipe = new ArrayList<>();
+
+    @ToString.Exclude
+    @OneToOne(mappedBy = "equipe")
+    private EquipeGroupe equipeGroupe;
 }
