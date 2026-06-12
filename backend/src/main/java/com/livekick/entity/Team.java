@@ -9,14 +9,14 @@ import java.util.List;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "equipes")
+@Table(name = "team")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "Equipe::findAll", query = "from Equipe e"),
-        @NamedQuery(name = "Equipe::findById", query = "from Equipe e where e.id = ?1"),
+        @NamedQuery(name = "Team::findAll", query = "from Team e"),
+        @NamedQuery(name = "Team::findById", query = "from Team e where e.id = ?1"),
 
 })
-public class Equipe {
+public class Team {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,21 +36,21 @@ public class Equipe {
     // Relations
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "equipeDomicile")
+    @OneToMany(mappedBy = "homeTeam")
     @Builder.Default
-    private List<Match> matchsDomicile = new ArrayList<>();
+    private List<FootballMatch> homeMatches = new ArrayList<>();
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "equipeExterieur")
+    @OneToMany(mappedBy = "awayTeam")
     @Builder.Default
-    private List<Match> matchsExterieur = new ArrayList<>();
+    private List<FootballMatch> awayMatches = new ArrayList<>();
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "equipe")
+    @OneToMany(mappedBy = "team")
     @Builder.Default
-    private List<CompositionEquipe> compositionsEquipe = new ArrayList<>();
+    private List<TeamComposition> teamCompositions = new ArrayList<>();
 
     @ToString.Exclude
-    @OneToOne(mappedBy = "equipe")
-    private EquipeGroupe equipeGroupe;
+    @OneToOne(mappedBy = "team")
+    private TeamGroup teamGroup;
 }

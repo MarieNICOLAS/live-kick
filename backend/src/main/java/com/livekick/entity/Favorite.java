@@ -8,14 +8,14 @@ import jakarta.persistence.*;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "favoris")
+@Table(name = "favorite")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "Favori::findAll", query = "from Favori f"),
-        @NamedQuery(name = "Favori::findById", query = "from Favori f where f.id = ?1"),
+        @NamedQuery(name = "Favorite::findAll", query = "from Favorite f"),
+        @NamedQuery(name = "Favorite::findById", query = "from Favorite f where f.id = ?1"),
 
 })
-public class Favori {
+public class Favorite {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

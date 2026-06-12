@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "equipe_groupes")
+@Table(name = "team_group")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "EquipeGroupe::findAll", query = "from EquipeGroupe eg"),
-        @NamedQuery(name = "EquipeGroupe::findById", query = "from EquipeGroupe eg where eg.id = ?1")
+        @NamedQuery(name = "TeamGroup::findAll", query = "from TeamGroup eg"),
+        @NamedQuery(name = "TeamGroup::findById", query = "from TeamGroup eg where eg.id = ?1")
 })
-public class EquipeGroupe {
+public class TeamGroup {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,11 +54,13 @@ public class EquipeGroupe {
     
     // Liaisons
     
+    @ToString.Exclude
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_equipe", nullable = false, unique = true)
-    private Equipe equipe;
+    @JoinColumn(name = "id_team", nullable = false, unique = true)
+    private Team team;
 
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_groupe", nullable = false)
-    private Groupe groupe;
+    @JoinColumn(name = "id_competition_group", nullable = false)
+    private CompetitionGroup competitionGroup;
 }

@@ -7,14 +7,14 @@ import jakarta.persistence.*;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "statistiques_matchs")
+@Table(name = "match_statistics")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "StatistiqueMatch::findAll", query = "from StatistiqueMatch sm"),
-        @NamedQuery(name = "StatistiqueMatch::findById", query = "from StatistiqueMatch sm where sm.id = ?1"),
+        @NamedQuery(name = "MatchStatistics::findAll", query = "from MatchStatistics sm"),
+        @NamedQuery(name = "MatchStatistics::findById", query = "from MatchStatistics sm where sm.id = ?1"),
 
 })
-public class StatistiqueMatch {
+public class MatchStatistics {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -89,7 +89,8 @@ public class StatistiqueMatch {
 
     // Relations
 
+    @ToString.Exclude
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "match_id", nullable = false, unique = true)
-    private Match match;
+    @JoinColumn(name = "id_football_match", nullable = false, unique = true)
+    private FootballMatch footballMatch;
 }

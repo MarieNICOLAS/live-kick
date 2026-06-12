@@ -7,14 +7,14 @@ import jakarta.persistence.*;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "stades")
+@Table(name = "stadium")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "Stade::findAll", query = "from Stade s"),
-        @NamedQuery(name = "Stade::findById", query = "from Stade s where s.id = ?1"),
+        @NamedQuery(name = "Stadium::findAll", query = "from Stadium s"),
+        @NamedQuery(name = "Stadium::findById", query = "from Stadium s where s.id = ?1"),
 
 })
-public class Stade {
+public class Stadium {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,7 +38,8 @@ public class Stade {
     private Double longitude;
 
     // Relations
-    @OneToMany(mappedBy = "stade")
+    @ToString.Exclude
+    @OneToMany(mappedBy = "stadium")
     @Builder.Default
-    private java.util.List<Match> matchs = new java.util.ArrayList<>();
+    private java.util.List<FootballMatch> footballMatches = new java.util.ArrayList<>();
 }

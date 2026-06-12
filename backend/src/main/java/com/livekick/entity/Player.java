@@ -10,14 +10,14 @@ import java.time.LocalDate;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "joueurs")
+@Table(name = "player")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "Joueur::findAll", query = "from Joueur j"),
-        @NamedQuery(name = "Joueur::findById", query = "from Joueur j where j.id = ?1"),
+        @NamedQuery(name = "Player::findAll", query = "from Player j"),
+        @NamedQuery(name = "Player::findById", query = "from Player j where j.id = ?1"),
 
 })
-public class Joueur {
+public class Player {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,7 +46,8 @@ public class Joueur {
 
     // Relations
     
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "equipe_id", nullable = false)
-    private Equipe equipe;
+    @JoinColumn(name = "id_team", nullable = false)
+    private Team team;
 }

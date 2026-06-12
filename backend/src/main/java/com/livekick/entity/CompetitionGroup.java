@@ -10,14 +10,14 @@ import java.util.List;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "groupes")
+@Table(name = "competition_group")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "Groupe::findAll", query = "from Groupe g"),
-        @NamedQuery(name = "Groupe::findById", query = "from Groupe g where g.id = ?1"),
+        @NamedQuery(name = "CompetitionGroup::findAll", query = "from CompetitionGroup g"),
+        @NamedQuery(name = "CompetitionGroup::findById", query = "from CompetitionGroup g where g.id = ?1"),
 
 })
-public class Groupe {
+public class CompetitionGroup {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,7 +29,7 @@ public class Groupe {
     private String codeGroupe; // A, B, C...
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "groupe")
+    @OneToMany(mappedBy = "competitionGroup")
     @Builder.Default
-    private List<EquipeGroupe> equipesGroupe = new ArrayList<>();
+    private List<TeamGroup> teamGroups = new ArrayList<>();
 }

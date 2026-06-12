@@ -9,15 +9,15 @@ import jakarta.persistence.*;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "ai_predictions")
+@Table(name = "prediction")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "AiPrediction::findAll", query = "from AiPrediction ap"),
-        @NamedQuery(name = "AiPrediction::findById", query = "from AiPrediction ap where ap.id = ?1"),
+        @NamedQuery(name = "Prediction::findAll", query = "from Prediction ap"),
+        @NamedQuery(name = "Prediction::findById", query = "from Prediction ap where ap.id = ?1"),
 
 })
 
-public class AiPrediction {
+public class Prediction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -48,7 +48,8 @@ public class AiPrediction {
 
     // Relations
     
+    @ToString.Exclude
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "match_id", nullable = false, unique = true)
-    private Match match;
+    @JoinColumn(name = "id_football_match", nullable = false, unique = true)
+    private FootballMatch footballMatch;
 }

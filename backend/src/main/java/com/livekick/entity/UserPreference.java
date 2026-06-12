@@ -8,14 +8,14 @@ import jakarta.persistence.*;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "preference_utilisateur")
+@Table(name = "user_preference")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "PreferenceUtilisateur::findAll", query = "from PreferenceUtilisateur pu"),
-        @NamedQuery(name = "PreferenceUtilisateur::findById", query = "from PreferenceUtilisateur pu where pu.id = ?1"),
+        @NamedQuery(name = "UserPreference::findAll", query = "from UserPreference pu"),
+        @NamedQuery(name = "UserPreference::findById", query = "from UserPreference pu where pu.id = ?1"),
 
 })
-public class PreferenceUtilisateur {
+public class UserPreference {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,7 +30,8 @@ public class PreferenceUtilisateur {
     private String fuseauHoraire;
 
     // Relations
+    @ToString.Exclude
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "utilisateur_id", nullable = false, unique = true)
-    private Utilisateur utilisateur;
+    @JoinColumn(name = "id_user", nullable = false, unique = true)
+    private User user;
 }

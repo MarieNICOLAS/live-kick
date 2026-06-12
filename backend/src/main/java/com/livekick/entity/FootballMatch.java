@@ -12,14 +12,14 @@ import java.util.List;
 
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 @Builder
-@Table(name = "matchs")
+@Table(name = "football_match")
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "Match::findAll", query = "from Match m"),
-        @NamedQuery(name = "Match::findById", query = "from Match m where m.id = ?1"),
+        @NamedQuery(name = "FootballMatch::findAll", query = "from FootballMatch m"),
+        @NamedQuery(name = "FootballMatch::findById", query = "from FootballMatch m where m.id = ?1"),
 
 })
-public class Match {
+public class FootballMatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -43,25 +43,28 @@ public class Match {
 
     // Relations
 
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "equipe_domicile_id", nullable = false)
-    private Equipe equipeDomicile;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "equipe_exterieur_id", nullable = false)
-    private Equipe equipeExterieur;
+    @JoinColumn(name = "id_home_team", nullable = false)
+    private Team homeTeam;
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "match")
-    @Builder.Default
-    private List<CompositionEquipe> compositionsEquipe = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_away_team", nullable = false)
+    private Team awayTeam;
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "match")
+    @OneToMany(mappedBy = "footballMatch")
     @Builder.Default
-    private List<EvenementMatch> evenementsMatch = new ArrayList<>();
+    private List<TeamComposition> teamCompositions = new ArrayList<>();
 
+    @ToString.Exclude
+    @OneToMany(mappedBy = "footballMatch")
+    @Builder.Default
+    private List<MatchEvent> matchEvents = new ArrayList<>();
+
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stade_id")
-    private Stade stade;
+    @JoinColumn(name = "id_stadium")
+    private Stadium stadium;
 }
