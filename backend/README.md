@@ -55,16 +55,36 @@ Hibernate est configure en mode `validate`. Cela veut dire qu'il verifie le sche
 
 Demarrer d'abord PostgreSQL :
 
-```powershell
+```bash
 docker compose up -d postgres redis
 ```
 
-Puis lancer le backend :
+Puis lancer le backend.
+
+**Windows :**
 
 ```powershell
 cd backend
 .\mvnw.cmd spring-boot:run
 ```
+
+**macOS / Linux :**
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+**macOS / Linux — sans PostgreSQL (profil test, port 8090) :**
+
+```bash
+cd backend
+mvn org.springframework.boot:spring-boot-maven-plugin:3.5.14:run \
+  -Dspring-boot.run.profiles=test \
+  -Dspring-boot.run.arguments=--server.port=8090
+```
+
+Ce mode desactive la datasource et Flyway. Les endpoints football (teams, matches, groups, stadiums) fonctionnent car ils appellent l'API externe, pas PostgreSQL.
 
 ## Points d'entree
 
