@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import json
 
 # Project
-from BaseModel import PredictionResponse
+from utils.BaseModel import PredictionResponse
 
 # Noted as not used, but USED in routes.py.
 def _fallback_prediction(match_id: int, explanation: str) -> PredictionResponse:

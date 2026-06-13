@@ -3,8 +3,9 @@ from datetime import datetime, timezone
 import json
 
 # Project
-from main import _extract_json_payload, _fallback_prediction, app, lm_client
+from main import app, lm_client
 from utils.BaseModel import PredictionRequest, PredictionResponse
+from utils.PredictionManager import _fallback_prediction, _extract_json_payload
 
 @app.get("/health")
 def health() -> dict[str, str]:
