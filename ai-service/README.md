@@ -57,6 +57,110 @@ GET /model_status (WIP)
 POST /predict
 ```
 
+# Details Endpoints
+
+## GET `/health`
+
+Vérifie que le service est opérationnel.
+
+**Entrée :** aucune
+
+**Sortie :**
+
+```json
+{
+  "status": "UP"
+}
+```
+
+---
+
+## GET `/model-status`
+
+Retourne l'état du modèle IA. _(Non implémenté — placeholder)_
+
+**Entrée :** aucune
+
+**Sortie :**
+
+```json
+{
+  "status": "Model status endpoint not yet implemented."
+}
+```
+
+---
+
+## POST `/predict`
+
+Demande une prédiction pour un match de football.
+
+### Entrée (JSON body)
+
+| Champ | Type | Obligatoire | Description |
+|---|---|---|---|
+| `match_id` | `int` | ✅ | Identifiant unique du match |
+| `home_team` | `TeamContext` | ✅ | Équipe à domicile |
+| `home_team.name` | `string` (min 1 car.) | ✅ | Nom complet de l'équipe |
+| `home_team.fifa_code` | `string` (2–3 car.) | ✅ | Code FIFA de l'équipe (ex. `FRA`, `BRZ`) |
+| `away_team` | `TeamContext` | ✅ | Équipe à l'extérieur |
+| `away_team.name` | `string` (min 1 car.) | ✅ | Nom complet de l'équipe |
+| `away_team.fifa_code` | `string` (2–3 car.) | ✅ | Code FIFA de l'équipe |
+| `stadium` | `string` (min 1 car.) | ✅ | Nom du stade |
+
+**Exemple de requête :**
+
+```json
+{
+  "match_id": 42,
+  "home_team": {
+    "name": "France",
+    "fifa_code": "FRA"
+  },
+  "away_team": {
+    "name": "Brazil",
+    "fifa_code": "BRZ"
+  },
+  "stadium": "Stade de France"
+}
+```
+
+### Sortie (JSON)
+
+| Champ | Type | Description |
+|---|---|---|
+| `match_id` | `int` | Identifiant du match |
+| `home_win_probability` | `float` (0–100) | Probabilité de victoire à domicile (%) |
+| `draw_probability` | `float` (0–100) | Probabilité de match nul (%) |
+| `away_win_probability` | `float` (0–100) | Probabilité de victoire à l'extérieur (%) |
+| `predicted_home_score` | `int` | Score prédit pour l'équipe à domicile |
+| `predicted_away_score` | `int` | Score prédit pour l'équipe à l'extérieur |
+| `confidence_score` | `float` (0–100) | Niveau de confiance du modèle (%) |
+| `model_name` | `string` | Nom du modèle utilisé |
+| `explanation` | `string` | Explication textuelle de la prédiction |
+| `generated_at` | `datetime` (ISO 8601) | Horodatage de génération (UTC) |
+
+**Exemple de réponse :**
+
+```json
+{
+  "match_id": 42,
+  "home_win_probability": 55.0,
+  "draw_probability": 25.0,
+  "away_win_probability": 20.0,
+  "predicted_home_score": 2,
+  "predicted_away_score": 1,
+  "confidence_score": 72.0,
+  "model_name": "lmstudio-local-model",
+  "explanation": "France has a strong home record and recent form advantage.",
+  "generated_at": "2026-06-13T10:00:00Z"
+}
+```
+
+> En cas d'indisponibilité du modèle LMStudio ou de réponse invalide, un résultat de fallback est retourné automatiquement avec une explication appropriée.
+
+---
+
 ## Vérification rapide
 
 ```powershell
