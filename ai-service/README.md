@@ -1,25 +1,25 @@
 # Service IA LiveKick
 
-Ce dossier contient le service analytique dedie aux predictions de match.
+Ce dossier contient le service analytique dédié aux prédictions de match.
 
-Il est separe du backend pour garder une architecture claire :
+Il est séparé du backend pour garder une architecture claire :
 
 ```text
 frontend -> backend -> ai-service
 ```
 
-Le frontend ne contacte jamais directement ce service. Le backend prepare les donnees du match, appelle le service IA, puis renvoie une reponse propre au frontend.
+Le frontend ne contacte jamais directement ce service. Le backend prépare les données du match, appelle le service IA, puis renvoie une réponse propre au frontend.
 
 ## Role du service
 
 - Recevoir un contexte de match.
 - Calculer ou simuler une prediction.
-- Retourner des probabilites, un score predit et une explication.
+- Retourner des probabilités, un score prédit et une explication.
 
-Pour l'instant, le service contient une prediction de base. Il sert de point de depart pour brancher ensuite un vrai modele analytique.
 
 ## Installation
 
+### Environnement
 ```powershell
 cd ai-service
 python -m venv .venv
@@ -27,10 +27,20 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+### Installation de LMStudio
+
+Suivre le tutoriel d'installation de [LMStudio](https://lmstudio.ai/).  
+Une fois l'installation terminé:
+ - Télécharger le model suivant: "google/gemma-4-e2b" (Il s'agit du model utilisé par défaut du projet)
+ - Activer le serveur local, qui doit tourner sur le port 1234.  
+ - Désactivé également l'authentification.
+
+L'application devrait tourner sans problème.
+
 ## Lancer en local
 
 ```powershell
-uvicorn app.main:app --reload --port 8000
+fastapi dev
 ```
 
 URL locale :
@@ -43,18 +53,20 @@ http://localhost:8000
 
 ```text
 GET /health
+GET /model_status (WIP)
 POST /predict
 ```
 
-## Verification rapide
+## Vérification rapide
 
 ```powershell
 python -m compileall app
 ```
 
-## Regles simples
+## Règles simples
 
-- Garder les entrees et sorties en JSON.
+- Garder les entrées et sorties en JSON.
 - Ne pas acceder directement a PostgreSQL depuis ce service.
-- Laisser le backend gerer la securite, les droits et la persistance.
-- Garder les reponses explicables pour l'utilisateur final.
+- Laisser le backend gérer la sécurité, les droits et la persistance.
+- Garder les réponses explicables pour l'utilisateur final.
+
