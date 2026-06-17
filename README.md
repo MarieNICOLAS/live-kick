@@ -121,10 +121,32 @@ Le backend utilise cette configuration via `backend/src/main/resources/applicati
 
 Depuis la racine du projet :
 
+**Windows :**
+
 ```powershell
 cd backend
 .\mvnw.cmd spring-boot:run
 ```
+
+**macOS / Linux :**
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Si Maven Wrapper n'est pas executable, utiliser `mvn` directement.
+
+**macOS / Linux — sans PostgreSQL (profil test, port 8090) :**
+
+```bash
+cd backend
+mvn org.springframework.boot:spring-boot-maven-plugin:3.5.14:run \
+  -Dspring-boot.run.profiles=test \
+  -Dspring-boot.run.arguments=--server.port=8090
+```
+
+Ce mode desactive la datasource et Flyway. Utile pour tester les endpoints qui appellent l'API externe (teams, matches, groups, stadiums) sans avoir PostgreSQL en local.
 
 Le backend demarre sur :
 
@@ -210,28 +232,58 @@ Si aucune table n'apparait, verifier que le backend a bien demarre jusqu'au bout
 
 ### Backend
 
-Lancer :
+Lancer (Windows) :
 
 ```powershell
 cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
-Tester :
+Lancer (macOS / Linux) :
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Lancer sans PostgreSQL — profil test, port 8090 (macOS / Linux) :
+
+```bash
+cd backend
+mvn org.springframework.boot:spring-boot-maven-plugin:3.5.14:run \
+  -Dspring-boot.run.profiles=test \
+  -Dspring-boot.run.arguments=--server.port=8090
+```
+
+Tester (Windows) :
 
 ```powershell
 cd backend
 .\mvnw.cmd test
 ```
 
-Build :
+Tester (macOS / Linux) :
+
+```bash
+cd backend
+mvn test
+```
+
+Build (Windows) :
 
 ```powershell
 cd backend
 .\mvnw.cmd clean package
 ```
 
-Le projet utilise Maven Wrapper (`mvnw.cmd`). Cela permet de lancer Maven avec la version prevue par le projet, meme si Maven n'est pas installe globalement sur la machine.
+Build (macOS / Linux) :
+
+```bash
+cd backend
+mvn clean package
+```
+
+Le projet utilise Maven Wrapper (`mvnw.cmd` sur Windows, `mvnw` sur macOS/Linux). Si le wrapper n'est pas executable, utiliser `mvn` directement.
 
 ### Frontend
 
