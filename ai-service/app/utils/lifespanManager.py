@@ -1,8 +1,17 @@
 # System
+import asyncio
 from contextlib import asynccontextmanager
 
 # Third-party
 from fastapi import FastAPI
+
+
+async def _load_model(lm_client) -> None:
+    print("Loading models and initializing resources...")
+    result = await asyncio.to_thread(lm_client.load_model)
+    if isinstance(result, dict) and "error" in result:
+        print(f"LMStudio model load failed: {result['error']}")
+
 
 @asynccontextmanager
 async def lifespanManager(app: FastAPI):
@@ -10,8 +19,7 @@ async def lifespanManager(app: FastAPI):
     if lm_client is None:
         raise RuntimeError("LM client is not initialized on app.state")
 
-    print("Loading models and initializing resources...")
-    lm_client.load_model()
+    app.state.model_load_task = asyncio.create_task(_load_model(lm_client))
 
     yield  # Application is running here
     

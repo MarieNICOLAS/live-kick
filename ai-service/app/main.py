@@ -4,12 +4,15 @@
 from fastapi import FastAPI
 
 # Project
-from models.LMStudio import LMStudioClient
-from utils.lifespanManager import lifespanManager
+from app.api.routes.Routes import router as routes_router
+from app.models.LMStudio import LMStudioClient
+from app.services.PredictionService import PredictionService
+from app.utils.lifespanManager import lifespanManager
 
 # LMStudio client
 # Get system prompt from  "system_prompt.txt" if it exists, otherwise use default prompt
 lm_client = LMStudioClient()
+prediction_service = PredictionService(lm_client)
 
 
 # App
@@ -22,4 +25,7 @@ app = FastAPI(
 
 # Expose shared services through FastAPI state to avoid circular imports.
 app.state.lm_client = lm_client
+app.state.prediction_service = prediction_service
+
+app.include_router(routes_router)
 

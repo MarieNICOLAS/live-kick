@@ -3,10 +3,9 @@ from datetime import datetime, timezone
 import json
 
 # Project
-from utils.BaseModel import PredictionResponse
+from app.utils.BaseModel import PredictionResponse
 
-# Noted as not used, but USED in routes.py.
-def _fallback_prediction(match_id: int, explanation: str) -> PredictionResponse:
+def fallback_prediction(match_id: int, explanation: str) -> PredictionResponse:
     return PredictionResponse(
         match_id=match_id,
         home_win_probability=0.0,
@@ -20,8 +19,10 @@ def _fallback_prediction(match_id: int, explanation: str) -> PredictionResponse:
         generated_at=datetime.now(timezone.utc),
     )
 
-# Noted as not used, but USED in routes.py.
-def _extract_json_payload(raw_text: str) -> dict:
+def extract_json_payload(raw_text: str) -> dict:
+    if not isinstance(raw_text, str):
+        raise TypeError("Model response must be a string")
+
     content = raw_text.strip()
 
     if content.startswith("```"):
@@ -35,3 +36,7 @@ def _extract_json_payload(raw_text: str) -> dict:
         raise ValueError("No JSON object found in model response")
 
     return json.loads(content[start : end + 1])
+
+
+_fallback_prediction = fallback_prediction
+_extract_json_payload = extract_json_payload

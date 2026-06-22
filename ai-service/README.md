@@ -21,10 +21,18 @@ Le frontend ne contacte jamais directement ce service. Le backend prépare les d
 
 ### Environnement
 ```powershell
-cd ai-service
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+cd ai-service # Pas à la racine du projet
+
+python3 -m venv .venv # Environnement virtuel
+
+.\.venv\Scripts\Activate # Source environnement virtuel
+pip install -r requirements.txt # Installation des dépendances requises
+
+curl http://127.0.0.1:8000/ # Essai
+
+# Doit répondre:
+# {"status":"UP","service":"LiveKick AI Service"}
+
 ```
 
 ### Installation de LMStudio
