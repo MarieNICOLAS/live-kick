@@ -29,7 +29,7 @@ class LMStudioClient:
     @staticmethod
     def _load_system_prompt() -> str:
         """Load system prompt from external config file"""
-        config_path = Path(__file__).resolve().parent / "config" / "system_prompt.txt"
+        config_path = Path(__file__).resolve().parent.parent / "config" / "system_prompt.txt"
         try:
             with config_path.open("r", encoding="utf-8") as file:
                 print(f"Loaded system prompt from {config_path}")
@@ -42,7 +42,7 @@ class LMStudioClient:
     def call_api(
         self,
         messages: list[dict],
-        model: str = "local-model",
+        model: str = "google/gemma-4-e2b",
         temperature: float = 0.0,
         max_tokens: int = 2048,
     ) -> dict:
@@ -77,6 +77,8 @@ class LMStudioClient:
             return response.json()
         except requests.exceptions.RequestException as e:
             return {"error": str(e)}
+        except ValueError as e:
+            return {"error": f"Invalid JSON response from LMStudio: {e}"}
     
 
     def load_model(self) -> dict:
@@ -102,6 +104,8 @@ class LMStudioClient:
             return response.json()
         except requests.exceptions.RequestException as e:
             return {"error": str(e)}
+        except ValueError as e:
+            return {"error": f"Invalid JSON response from LMStudio: {e}"}
         
     
     def unload_model(self, model_name: Optional[str] = None) -> dict:
@@ -126,6 +130,8 @@ class LMStudioClient:
             return response.json()
         except requests.exceptions.RequestException as e:
             return {"error": str(e)}
+        except ValueError as e:
+            return {"error": f"Invalid JSON response from LMStudio: {e}"}
 
 
     def generate_text(self, prompt: str, **kwargs) -> str:
@@ -145,4 +151,16 @@ class LMStudioClient:
         if "error" in response:
             return f"Error: {response['error']}"
         
-        return response.get("choices", [{}])[0].get("message", {}).get("content", "")
+        try:
+            choices = response.get("choices")
+            if not choices:
+                return "Error: LMStudio response does not contain choices"
+
+            message = choices[0].get("message", {})
+            content = message.get("content", "")
+            if not isinstance(content, str):
+                return "Error: LMStudio response content is not a string"
+
+            return content
+        except (AttributeError, IndexError, TypeError) as e:
+            return f"Error: Invalid LMStudio response format: {e}"
