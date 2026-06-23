@@ -12,10 +12,9 @@ Le backend est la source de verite. Toute regle metier critique doit etre appliq
 - Spring Boot 3.5
 - Spring Web
 - Spring Security
-- Spring Data JPA
+- Spring JDBC
 - Spring Validation
-- Flyway
-- PostgreSQL
+- SQLite JDBC
 - Lombok
 - Actuator
 - Maven
@@ -53,8 +52,8 @@ Responsabilites :
 - `controller` : endpoints REST, validation d'entree, statut HTTP.
 - `dto` : contrats API, jamais d'entite JPA exposee directement.
 - `service` : logique metier et orchestration.
-- `repository` : acces PostgreSQL via Spring Data JPA.
-- `entity` : modele persistant aligne sur `02-naming-and-data-contract.md`.
+- `repository` : acces SQLite via Spring JDBC.
+- `entity` : modele metier historique ; les echanges API utilisent les DTO.
 - `mapper` : conversion entity/DTO.
 - `integration` : appels API football externe et service IA.
 - `security` : JWT, RBAC, configuration Spring Security.
@@ -64,7 +63,7 @@ Responsabilites :
 
 - Layered Architecture.
 - DTO pattern.
-- Repository pattern via Spring Data JPA.
+- Repository pattern via Spring JDBC.
 - Service layer pour la logique metier.
 - Mapper dedie pour eviter la logique de conversion dans les controllers.
 - Adapter/Gateway pour les services externes.
@@ -169,11 +168,12 @@ Les messages doivent etre clairs pour le frontend, sans fuite technique.
 
 ## Persistance
 
-- PostgreSQL est la base relationnelle cible.
-- Flyway gere les migrations.
-- Les migrations doivent respecter `snake_case` et les tables au singulier.
+- SQLite est la base relationnelle du MVP.
+- Le schema est initialise par `db/sqlite/schema.sql`.
+- Le schema respecte `snake_case` et les tables au singulier.
 - Les contraintes d'integrite doivent etre posees en base quand elles sont critiques.
 - Les requetes custom doivent rester dans les repositories.
+- Les favoris et preferences locales restent dans le `localStorage` du frontend.
 
 ## Live
 
@@ -188,7 +188,7 @@ Approche cible :
 Le backend orchestre l'IA :
 
 ```text
-Frontend -> Backend -> AI service -> Backend -> PostgreSQL -> Frontend
+Frontend -> Backend -> AI service -> Backend -> SQLite -> Frontend
 ```
 
 Le backend doit :

@@ -124,11 +124,12 @@ addFavorite(payload)
 
 Utiliser Zustand pour les etats partages :
 
-- session/auth ;
-- profil utilisateur ;
 - favoris ;
 - preferences ;
 - etats live si necessaire.
+
+Les favoris et preferences sont persistes dans `localStorage`. Les donnees
+football viennent toujours du backend et ne doivent pas y etre dupliquees.
 
 Garder local dans les composants :
 
@@ -161,7 +162,7 @@ LiveKick doit etre rapide a consulter :
 - Ne jamais stocker de secret frontend.
 - Ne jamais exposer un token dans l'URL.
 - Ne jamais faire confiance aux droits affiches cote frontend.
-- Ne jamais appeler PostgreSQL, API football externe ou service IA directement.
+- Ne jamais appeler SQLite, l'API football externe ou le service IA directement.
 - Utiliser l'escaping React naturel, eviter `dangerouslySetInnerHTML`.
 - Masquer les pages admin cote UI, mais laisser le backend refuser l'acces.
 

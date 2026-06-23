@@ -1,6 +1,6 @@
 # LiveKick 2026 - Contrat de nommage et donnees
 
-Ce fichier est la reference principale pour conserver la coherence entre PostgreSQL, migrations SQL, entites JPA, DTO, services, payloads REST et types TypeScript.
+Ce fichier est la reference principale pour conserver la coherence entre SQLite, schema SQL, repositories JDBC, DTO, services, payloads REST et types TypeScript.
 
 ## Conventions globales
 
@@ -93,6 +93,10 @@ Utiliser :
 - `Stadium`
 
 ## User domain
+
+Dans le MVP sans compte utilisateur, `Favorite` et `UserPreference` sont des
+modeles d'evolution. Les favoris et preferences actifs sont stockes dans le
+`localStorage` du frontend.
 
 ### User
 

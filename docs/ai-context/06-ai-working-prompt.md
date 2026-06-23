@@ -18,7 +18,7 @@ garder la coherence entre le cahier des charges, la conception UML/Merise, le mo
 
 Regles non negociables :
 - Le backend est la source de verite.
-- Le frontend ne contacte jamais PostgreSQL, l'API football externe ou le service IA directement.
+- Le frontend ne contacte jamais SQLite, l'API football externe ou le service IA directement.
 - Respecte les noms canoniques : User, Team, Player, FootballMatch, MatchEvent, Prediction, Stadium, CompetitionGroup.
 - SQL en snake_case et tables au singulier.
 - Java/TypeScript en camelCase pour les champs.
@@ -38,9 +38,9 @@ Quand tu codes :
 
 Stack actuelle :
 - Frontend : React 19, TypeScript, Vite, React Router, Zustand, Axios.
-- Backend : Java 21, Spring Boot 3.5, Spring Web, Spring Security, Spring Data JPA, Validation, Flyway, PostgreSQL.
+- Backend : Java 21, Spring Boot 3.5, Spring Web, Spring Security, Spring JDBC, Validation, SQLite.
 - IA cible : FastAPI.
-- Infrastructure cible : Docker Compose, PostgreSQL, Redis si necessaire.
+- Infrastructure cible : Docker Compose et volume SQLite.
 
 Ne renomme jamais un concept metier sans raison documentee.
 ```
