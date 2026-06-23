@@ -1,6 +1,6 @@
 import { Activity, Bell, CalendarDays, Home, LogIn, Moon, Search, Sun, BarChart3, User } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
-import { useTheme } from '../../app/providers'
+import { useTheme } from '../../app/themeContext'
 import iconLogo from '../../assets/logos/simply-color-logo.png'
 
 const mainLinks = [
