@@ -70,9 +70,12 @@ LiveKick adopte une architecture client/serveur decouplee.
 ```text
 Frontend React
   -> Backend Spring Boot
-      -> PostgreSQL
+      -> SQLite
       -> API football externe
       -> AI service FastAPI
+
+Frontend React
+  -> localStorage pour favoris et preferences locales
 ```
 
 Le backend centralise :
@@ -105,18 +108,17 @@ Le backend centralise :
 - Spring Boot 3.5
 - Spring Web
 - Spring Security
-- Spring Data JPA
+- Spring JDBC
 - Spring Validation
-- Flyway
-- PostgreSQL Driver
+- SQLite JDBC
 - Lombok
 - Actuator
 - Maven Wrapper
 
 ### Cible data/IA/infra
 
-- PostgreSQL 16+
-- Redis pour cache/live si besoin
+- SQLite pour stockage local et cache
+- localStorage pour favoris et preferences
 - FastAPI pour `ai-service`
 - Docker Compose
 - Swagger/OpenAPI
@@ -137,13 +139,13 @@ Le backend centralise :
 ### Liste des matchs
 
 ```text
-Frontend -> GET /api/matches?phase=group -> Backend -> MatchService -> PostgreSQL
+Frontend -> GET /api/matches?phase=group -> Backend -> MatchService -> SQLite
 ```
 
 Si les donnees locales sont insuffisantes :
 
 ```text
-MatchService -> API football externe -> mapping -> upsert PostgreSQL
+MatchService -> API football externe -> mapping -> upsert SQLite
 ```
 
 ### Detail live

@@ -31,5 +31,12 @@ ai-service/__pycache__/
 ai-service/*.pyc
 ai-service/**/*.pyc
 
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
 # Docker
 *.pid

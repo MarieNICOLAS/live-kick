@@ -24,7 +24,7 @@ Son objectif est d'eviter les incoherences entre :
 ## Regles non negociables
 
 - Le backend est la source de verite metier.
-- Le frontend ne contacte jamais directement PostgreSQL, l'API football externe ou le service IA.
+- Le frontend ne contacte jamais directement SQLite, l'API football externe ou le service IA.
 - Les noms des entites doivent rester coherents entre SQL, Java, DTO, API et TypeScript.
 - Les DTO ne doivent pas exposer directement les entites JPA.
 - Toute entree utilisateur doit etre validee cote backend, meme si le frontend valide deja.
