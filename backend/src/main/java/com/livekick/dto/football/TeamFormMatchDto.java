@@ -10,5 +10,5 @@ public record TeamFormMatchDto(
         Integer teamScore,
         Integer opponentScore,
         String result
-        ) {
+) {
 }

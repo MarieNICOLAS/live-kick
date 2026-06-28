@@ -97,3 +97,6 @@ CREATE INDEX IF NOT EXISTS idx_match_phase ON football_match (phase);
 CREATE INDEX IF NOT EXISTS idx_match_group ON football_match (group_code);
 CREATE INDEX IF NOT EXISTS idx_match_status ON football_match (status);
 CREATE INDEX IF NOT EXISTS idx_prediction_match ON prediction (id_match);
+CREATE INDEX IF NOT EXISTS idx_match_home_team ON football_match (id_home_team);
+CREATE INDEX IF NOT EXISTS idx_match_away_team ON football_match (id_away_team);
+CREATE INDEX IF NOT EXISTS idx_match_date ON football_match (match_date);

@@ -1,9 +1,9 @@
 package com.livekick.dto.football;
 
-import  java.util.List;
+import java.util.List;
 
 public record TeamStatisticsDto(
-        long id,
+        Long id,
         TeamSummaryDto team,
         Integer matchesPlayed,
         Integer wins,
@@ -16,5 +16,5 @@ public record TeamStatisticsDto(
         Double averageGoalsFor,
         Double averageGoalsAgainst,
         List<TeamFormMatchDto> recentForm
-){
+) {
 }
