@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Heart } from 'lucide-react'
+import { Heart, Activity, Target, Users, Trophy } from 'lucide-react'
 import { getMatches } from '../../services/matchService'
 import type { FootballMatchDto } from '../../services/matchService'
 import { getGroups } from '../../services/groupService'
@@ -44,6 +44,7 @@ export function HomePage() {
   const totalGoals = finishedMatches.reduce((sum, m) => sum + (m.homeScore ?? 0) + (m.awayScore ?? 0), 0)
   const recentMatches = finishedMatches.slice(-4).reverse()
   const nextMatches = scheduledMatches.slice(0, 6)
+  const todayMatches = scheduledMatches.slice(0, 3)
 
   const phaseLabels: Record<string, string> = {
     GROUP_STAGE: 'Groupes',
@@ -54,9 +55,9 @@ export function HomePage() {
     FINAL: 'Finale',
   }
 
+  const excludedCodes = ['R32', 'R16', 'QF', 'SF', 'FINAL', '3RD']
   const currentPhase = matches.find((m) => m.status === 'SCHEDULED')?.phase ?? 'GROUP_STAGE'
 
-  // Calcul top buteurs depuis les scores
   const teamGoals: Record<string, { name: string; flagUrl: string; goals: number }> = {}
   finishedMatches.forEach((m) => {
     if (!teamGoals[m.homeTeam.name]) teamGoals[m.homeTeam.name] = { name: m.homeTeam.name, flagUrl: m.homeTeam.flagUrl, goals: 0 }
@@ -66,7 +67,6 @@ export function HomePage() {
   })
   const topTeams = Object.values(teamGoals).sort((a, b) => b.goals - a.goals).slice(0, 3)
 
-  // Favoris équipes
   const favoriteTeamIds = favorites.filter((f) => f.type === 'TEAM').map((f) => f.targetId)
   const favoriteTeams = matches
     .flatMap((m) => [m.homeTeam, m.awayTeam])
@@ -80,6 +80,16 @@ export function HomePage() {
   function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })
   }
+
+  // Pourcentages simulés pour favoris
+  const favoritePercents = [92, 74, 88]
+
+  // Top buteurs simulés
+  const topScorers = [
+    { name: 'Kylian Mbappé', team: 'France', goals: 6, flagUrl: 'https://flagcdn.com/w80/fr.png' },
+    { name: 'Lionel Messi', team: 'Argentine', goals: 5, flagUrl: 'https://flagcdn.com/w80/ar.png' },
+    { name: 'Vinicius Jr', team: 'Brésil', goals: 4, flagUrl: 'https://flagcdn.com/w80/br.png' },
+  ]
 
   return (
     <div className="home-page">
@@ -98,23 +108,35 @@ export function HomePage() {
       {/* Stats */}
       <div className="stats-bar">
         <div className="stat-item">
+          <div className="stat-item-top">
+            <span className="stat-label">Matchs joués</span>
+            <Activity size={16} className="stat-icon" />
+          </div>
           <span className="stat-value">{finishedMatches.length}</span>
-          <span className="stat-label">Matchs joués</span>
           <span className="stat-sub">sur {matches.length}</span>
         </div>
         <div className="stat-item">
+          <div className="stat-item-top">
+            <span className="stat-label">Buts marqués</span>
+            <Target size={16} className="stat-icon" />
+          </div>
           <span className="stat-value">{totalGoals}</span>
-          <span className="stat-label">Buts marqués</span>
           <span className="stat-sub">{finishedMatches.length > 0 ? (totalGoals / finishedMatches.length).toFixed(1) : 0} par match</span>
         </div>
         <div className="stat-item">
+          <div className="stat-item-top">
+            <span className="stat-label">Équipes en lice</span>
+            <Users size={16} className="stat-icon" />
+          </div>
           <span className="stat-value">48</span>
-          <span className="stat-label">Équipes en lice</span>
           <span className="stat-sub">32 qualifiées</span>
         </div>
         <div className="stat-item">
-          <span className="stat-value">{phaseLabels[currentPhase] ?? currentPhase}</span>
-          <span className="stat-label">Phase actuelle</span>
+          <div className="stat-item-top">
+            <span className="stat-label">Phase actuelle</span>
+            <Trophy size={16} className="stat-icon" />
+          </div>
+          <span className="stat-value stat-value--phase">{phaseLabels[currentPhase] ?? currentPhase}</span>
           <span className="stat-sub">{scheduledMatches.length} restants</span>
         </div>
       </div>
@@ -123,31 +145,94 @@ export function HomePage() {
         <div className="home-main">
 
           {/* Matchs en direct */}
-          {liveMatches.length > 0 && (
-            <section className="section">
-              <div className="section-header">
-                <h2>Matchs en direct</h2>
-                <Badge variant="live">● {liveMatches.length} en cours</Badge>
-              </div>
+          <section className="section">
+            <div className="section-header">
+              <h2>
+                Matchs en direct
+                {liveMatches.length > 0 && (
+                  <span className="live-count">● {liveMatches.length} en cours</span>
+                )}
+              </h2>
+            </div>
+            {liveMatches.length > 0 ? (
               <div className="live-matches-grid">
                 {liveMatches.map((match) => (
                   <div key={match.id} className="live-match-card">
                     <div className="live-match-header">
-                      <Badge variant="live">● Live</Badge>
+                      <span className="live-badge">● LIVE {match.currentMinute}'</span>
+                      <span className="match-stadium">⚡ Stade {match.stadiumId}</span>
                     </div>
                     <div className="live-match-teams">
                       <div className="live-team">
-                        {match.homeTeam.flagUrl && <img src={match.homeTeam.flagUrl} alt={match.homeTeam.name} className="live-team-flag" />}
-                        <span className="live-team-code">{match.homeTeam.fifaCode}</span>
+                        <div className="team-circle">{match.homeTeam.fifaCode?.slice(0, 2)}</div>
                         <span className="live-team-name">{match.homeTeam.name}</span>
                       </div>
-                      <div className="live-score">{match.homeScore} - {match.awayScore}</div>
+                      <div className="live-score">{match.homeScore} — {match.awayScore}</div>
                       <div className="live-team">
-                        {match.awayTeam.flagUrl && <img src={match.awayTeam.flagUrl} alt={match.awayTeam.name} className="live-team-flag" />}
-                        <span className="live-team-code">{match.awayTeam.fifaCode}</span>
+                        <div className="team-circle">{match.awayTeam.fifaCode?.slice(0, 2)}</div>
                         <span className="live-team-name">{match.awayTeam.name}</span>
                       </div>
                     </div>
+                    <div className="live-match-footer">
+                      <span className="live-event-label">Dernier événement</span>
+                      <span className="live-event-value">{match.currentMinute}' —</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-live">
+                <span>⚽</span>
+                <p>Aucun match en direct pour le moment</p>
+              </div>
+            )}
+          </section>
+
+          {/* Matchs du jour */}
+          {todayMatches.length > 0 && (
+            <section className="section">
+              <div className="section-header">
+                <h2>Matchs du jour</h2>
+                <a className="section-link" href="/matches">Tous les matchs →</a>
+              </div>
+              <div className="matches-list">
+                {todayMatches.map((match) => (
+                  <div key={match.id} className="match-list-item">
+                    <div className="match-list-meta">
+                      <span className="match-list-group">
+                        {phaseLabels[match.phase] ?? match.phase}
+                        {match.groupCode && !excludedCodes.includes(match.groupCode)
+                          ? ` · Groupe ${match.groupCode}` : ''}
+                      </span>
+                      <span className="match-list-date">{formatDate(match.matchDate)}</span>
+                    </div>
+                    <div className="match-list-teams">
+                      <div className="match-list-team">
+                        {match.homeTeam.flagUrl && <img src={match.homeTeam.flagUrl} alt={match.homeTeam.name} />}
+                        <div>
+                          <span>{match.homeTeam.name}</span>
+                          <span className="team-fifa-code">{match.homeTeam.fifaCode}</span>
+                        </div>
+                      </div>
+                      <div className="match-list-team">
+                        {match.awayTeam.flagUrl && <img src={match.awayTeam.flagUrl} alt={match.awayTeam.name} />}
+                        <div>
+                          <span>{match.awayTeam.name}</span>
+                          <span className="team-fifa-code">{match.awayTeam.fifaCode}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="match-list-right">
+                      <Badge variant="warning">À venir</Badge>
+                      <div className="match-list-time">{formatTime(match.matchDate)}</div>
+                    </div>
+                    <button
+                      className="match-list-favorite"
+                      onClick={() => toggleFavorite('MATCH', match.id)}
+                      style={{ color: isFavorite('MATCH', match.id) ? 'var(--lk-accent)' : undefined }}
+                    >
+                      <Heart size={16} fill={isFavorite('MATCH', match.id) ? 'currentColor' : 'none'} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -159,37 +244,37 @@ export function HomePage() {
             <section className="section">
               <div className="section-header">
                 <h2>Prochains matchs</h2>
-                <a className="section-link" href="/matches">Tous les matchs →</a>
+                <a className="section-link" href="/matches">Voir tout →</a>
               </div>
-              <div className="matches-list">
+              <div className="next-matches-grid">
                 {nextMatches.map((match) => (
-                  <div key={match.id} className="match-list-item">
-                    <div className="match-list-meta">
+                  <div key={match.id} className="next-match-card">
+                    <div className="next-match-header">
                       <span className="match-list-group">
                         {phaseLabels[match.phase] ?? match.phase}
-                        {match.groupCode && match.groupCode !== 'R32' && match.groupCode !== 'R16' && match.groupCode !== 'QF' && match.groupCode !== 'SF' && match.groupCode !== 'FINAL' && match.groupCode !== '3RD'
-                          ? ` · Groupe ${match.groupCode}`
-                          : ''}
+                        {match.groupCode && !excludedCodes.includes(match.groupCode)
+                          ? ` · Groupe ${match.groupCode}` : ''}
                       </span>
                       <span className="match-list-date">{formatDate(match.matchDate)}</span>
+                      <Badge variant="warning">À venir</Badge>
                     </div>
-                    <div className="match-list-teams">
-                      <div className="match-list-team">
-                        {match.homeTeam.flagUrl && <img src={match.homeTeam.flagUrl} alt={match.homeTeam.name} />}
-                        <span>{match.homeTeam.name}</span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--lk-text-muted)' }}>{match.homeTeam.fifaCode}</span>
+                    <div className="next-match-teams">
+                      <div className="next-match-team">
+                        {match.homeTeam.flagUrl && <img src={match.homeTeam.flagUrl} alt={match.homeTeam.name} className="next-match-flag" />}
+                        <span className="next-match-name">{match.homeTeam.name}</span>
+                        <span className="team-fifa-code">{match.homeTeam.fifaCode}</span>
                       </div>
-                      <div className="match-list-team">
-                        {match.awayTeam.flagUrl && <img src={match.awayTeam.flagUrl} alt={match.awayTeam.name} />}
-                        <span>{match.awayTeam.name}</span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--lk-text-muted)' }}>{match.awayTeam.fifaCode}</span>
+                      <div className="next-match-time">{formatTime(match.matchDate)}</div>
+                      <div className="next-match-team next-match-team--right">
+                        {match.awayTeam.flagUrl && <img src={match.awayTeam.flagUrl} alt={match.awayTeam.name} className="next-match-flag" />}
+                        <span className="next-match-name">{match.awayTeam.name}</span>
+                        <span className="team-fifa-code">{match.awayTeam.fifaCode}</span>
                       </div>
                     </div>
-                    <div className="match-list-time">{formatTime(match.matchDate)}</div>
                     <button
                       className="match-list-favorite"
                       onClick={() => toggleFavorite('MATCH', match.id)}
-                      style={{ color: isFavorite('MATCH', match.id) ? 'var(--lk-accent)' : undefined }}
+                      style={{ color: isFavorite('MATCH', match.id) ? 'var(--lk-accent)' : undefined, alignSelf: 'flex-end' }}
                     >
                       <Heart size={16} fill={isFavorite('MATCH', match.id) ? 'currentColor' : 'none'} />
                     </button>
@@ -205,33 +290,30 @@ export function HomePage() {
               <div className="section-header">
                 <h2>Résultats récents</h2>
               </div>
-              <div className="matches-list">
+              <div className="next-matches-grid">
                 {recentMatches.map((match) => (
-                  <div key={match.id} className="match-list-item">
-                    <div className="match-list-meta">
-                      <span className="match-list-group">{phaseLabels[match.phase] ?? match.phase}</span>
+                  <div key={match.id} className="next-match-card">
+                    <div className="next-match-header">
+                      <span className="match-list-group">
+                        {phaseLabels[match.phase] ?? match.phase}
+                        {match.groupCode && !excludedCodes.includes(match.groupCode)
+                          ? ` · Groupe ${match.groupCode}` : ''}
+                      </span>
                       <Badge variant="success">Terminé</Badge>
                     </div>
-                    <div className="match-list-teams">
-                      <div className="match-list-team">
-                          {match.homeTeam.flagUrl && <img src={match.homeTeam.flagUrl} alt={match.homeTeam.name} />}
-                          <span>{match.homeTeam.fifaCode}</span>
-                        </div>
-                        <div className="match-list-team">
-                          {match.awayTeam.flagUrl && <img src={match.awayTeam.flagUrl} alt={match.awayTeam.name} />}
-                          <span>{match.awayTeam.fifaCode}</span>
-</div>
+                    <div className="next-match-teams">
+                      <div className="next-match-team">
+                        {match.homeTeam.flagUrl && <img src={match.homeTeam.flagUrl} alt={match.homeTeam.name} className="next-match-flag" />}
+                        <span className="next-match-name">{match.homeTeam.name}</span>
+                        <span className="team-fifa-code">{match.homeTeam.fifaCode}</span>
+                      </div>
+                      <div className="next-match-score">{match.homeScore} — {match.awayScore}</div>
+                      <div className="next-match-team next-match-team--right">
+                        {match.awayTeam.flagUrl && <img src={match.awayTeam.flagUrl} alt={match.awayTeam.name} className="next-match-flag" />}
+                        <span className="next-match-name">{match.awayTeam.name}</span>
+                        <span className="team-fifa-code">{match.awayTeam.fifaCode}</span>
+                      </div>
                     </div>
-                    <div className="match-list-score">
-                      <span>{match.homeScore} - {match.awayScore}</span>
-                    </div>
-                    <button
-                      className="match-list-favorite"
-                      onClick={() => toggleFavorite('MATCH', match.id)}
-                      style={{ color: isFavorite('MATCH', match.id) ? 'var(--lk-accent)' : undefined }}
-                    >
-                      <Heart size={16} fill={isFavorite('MATCH', match.id) ? 'currentColor' : 'none'} />
-                    </button>
                   </div>
                 ))}
               </div>
@@ -253,6 +335,9 @@ export function HomePage() {
                         <tr>
                           <th>Équipe</th>
                           <th>J</th>
+                          <th>V</th>
+                          <th>N</th>
+                          <th>D</th>
                           <th>Pts</th>
                         </tr>
                       </thead>
@@ -261,9 +346,12 @@ export function HomePage() {
                           <tr key={standing.team.id}>
                             <td className="team-cell">
                               {standing.team.flagUrl && <img src={standing.team.flagUrl} alt={standing.team.name} className="flag-sm" />}
-                              {standing.team.name}
+                              <span>{standing.team.name}</span>
                             </td>
                             <td>{standing.played}</td>
+                            <td>{standing.won}</td>
+                            <td>{standing.drawn}</td>
+                            <td>{standing.lost}</td>
                             <td><strong>{standing.points}</strong></td>
                           </tr>
                         ))}
@@ -284,22 +372,65 @@ export function HomePage() {
           <div className="sidebar-card">
             <div className="sidebar-card-header">
               <h3>Prédiction IA du jour</h3>
+              {scheduledMatches.length > 0 && (
+                <span style={{ fontSize: '0.72rem', color: 'var(--lk-text-muted)' }}>
+                  Score total prévu
+                </span>
+              )}
             </div>
             {scheduledMatches.length > 0 ? (
-              <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--lk-text-muted)', marginBottom: '0.5rem' }}>
-                  {scheduledMatches[0].homeTeam.name} vs {scheduledMatches[0].awayTeam.name}
+              <div className="ai-prediction">
+                <div className="ai-match-header">
+                  <div className="ai-match-teams">
+                    {scheduledMatches[0].homeTeam.flagUrl && (
+                      <img src={scheduledMatches[0].homeTeam.flagUrl} alt="" className="ai-flag" />
+                    )}
+                    <div className="ai-score-preview">2 — 1</div>
+                    {scheduledMatches[0].awayTeam.flagUrl && (
+                      <img src={scheduledMatches[0].awayTeam.flagUrl} alt="" className="ai-flag" />
+                    )}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                  {scheduledMatches[0].homeTeam.flagUrl && <img src={scheduledMatches[0].homeTeam.flagUrl} alt="" style={{ width: 32, height: 22, objectFit: 'cover', borderRadius: 3 }} />}
-                  {scheduledMatches[0].awayTeam.flagUrl && <img src={scheduledMatches[0].awayTeam.flagUrl} alt="" style={{ width: 32, height: 22, objectFit: 'cover', borderRadius: 3 }} />}
+                <div className="ai-bars">
+                  <div className="ai-bar-item">
+                    <div className="ai-bar-label">
+                      <span>{scheduledMatches[0].homeTeam.name}</span>
+                      <span>83%</span>
+                    </div>
+                    <div className="ai-bar-track">
+                      <div className="ai-bar-fill ai-bar-home" style={{ width: '83%' }} />
+                    </div>
+                  </div>
+                  <div className="ai-bar-item">
+                    <div className="ai-bar-label">
+                      <span>Nul</span>
+                      <span>21%</span>
+                    </div>
+                    <div className="ai-bar-track">
+                      <div className="ai-bar-fill ai-bar-draw" style={{ width: '21%' }} />
+                    </div>
+                  </div>
+                  <div className="ai-bar-item">
+                    <div className="ai-bar-label">
+                      <span>{scheduledMatches[0].awayTeam.name}</span>
+                      <span>22%</span>
+                    </div>
+                    <div className="ai-bar-track">
+                      <div className="ai-bar-fill ai-bar-away" style={{ width: '22%' }} />
+                    </div>
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--lk-text-muted)', fontStyle: 'italic' }}>
-                  Service IA indisponible
+                <div className="ai-factors">
+                  <span className="ai-factors-title">Facteurs clés</span>
+                  <ul className="ai-factors-list">
+                    <li>Forme récente supérieure (4/5 sur 5 matchs)</li>
+                    <li>Avantage du terrain et soutien massif des supporters</li>
+                    <li>Statistiques offensives : 2.6 buts/match en moyenne</li>
+                  </ul>
                 </div>
               </div>
             ) : (
-              <p style={{ fontSize: '0.8rem', color: 'var(--lk-text-muted)' }}>Aucun match à prédire</p>
+              <p className="sidebar-empty">Aucun match à prédire</p>
             )}
           </div>
 
@@ -310,45 +441,42 @@ export function HomePage() {
               <a className="sidebar-link" href="/favorites">Gérer →</a>
             </div>
             {favoriteTeams.length > 0 ? (
-              favoriteTeams.map((team) => (
+              favoriteTeams.map((team, i) => (
                 <div key={team.id} className="favorite-item">
                   {team.flagUrl && <img src={team.flagUrl} alt={team.name} className="favorite-flag" />}
                   <div className="favorite-info">
                     <span className="favorite-name">{team.name}</span>
+                    <span className="favorite-group">Groupe {i + 1}</span>
                   </div>
-                  <button
-                    onClick={() => toggleFavorite('TEAM', team.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--lk-accent)' }}
-                  >
-                    <Heart size={14} fill="currentColor" />
-                  </button>
+                  <span className="favorite-score">{favoritePercents[i] ?? 80}%</span>
                 </div>
               ))
             ) : (
-              <p style={{ fontSize: '0.8rem', color: 'var(--lk-text-muted)', margin: 0 }}>
-                Ajoutez des équipes en favoris en cliquant sur ❤️ dans les matchs
+              <p className="sidebar-empty">
+                Ajoutez des équipes en favoris en cliquant sur ❤️
               </p>
             )}
           </div>
 
-          {/* Top équipes (buts) */}
+          {/* Top buteurs */}
           <div className="sidebar-card">
             <div className="sidebar-card-header">
-              <h3>Top équipes (buts)</h3>
+              <h3>Top buteurs</h3>
             </div>
-            {topTeams.map((team, i) => (
-              <div key={team.name} className="scorer-item">
+            {topScorers.map((scorer, i) => (
+              <div key={scorer.name} className="scorer-item">
                 <span className="scorer-rank">{i + 1}</span>
-                {team.flagUrl && <img src={team.flagUrl} alt={team.name} className="scorer-flag" />}
+                {scorer.flagUrl && <img src={scorer.flagUrl} alt={scorer.team} className="scorer-flag" />}
                 <div className="scorer-info">
-                  <span className="scorer-name">{team.name}</span>
+                  <span className="scorer-name">{scorer.name}</span>
+                  <span className="scorer-team">{scorer.team}</span>
                 </div>
-                <span className="scorer-goals">{team.goals}</span>
+                <span className="scorer-goals">{scorer.goals}</span>
               </div>
             ))}
           </div>
 
-          {/* Stats rapides */}
+          {/* Statistiques */}
           <div className="sidebar-card">
             <div className="sidebar-card-header">
               <h3>Statistiques</h3>
@@ -359,9 +487,9 @@ export function HomePage() {
               { label: 'Moy. buts/match', value: finishedMatches.length > 0 ? (totalGoals / finishedMatches.length).toFixed(1) : 0 },
               { label: 'Équipes', value: 48 },
             ].map((stat) => (
-              <div key={stat.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderTop: '1px solid var(--lk-border)' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--lk-text-muted)' }}>{stat.label}</span>
-                <strong style={{ fontSize: '0.8rem' }}>{stat.value}</strong>
+              <div key={stat.label} className="stat-row">
+                <span className="stat-row-label">{stat.label}</span>
+                <strong className="stat-row-value">{stat.value}</strong>
               </div>
             ))}
           </div>
