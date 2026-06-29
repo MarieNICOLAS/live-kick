@@ -20,7 +20,7 @@ app:
   jwt:
     secret: ${JWT_SECRET:replace-with-a-strong-secret-of-at-least-32-characters}
   ai-service:
-    base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+    base-url: ${AI_SERVICE_BASE_URL:http://127.0.0.1:8000}
   world-cup-2026-api:
     base-url: ${WORLD_CUP_2026_API_BASE_URL:https://worldcup26.ir}
     bearer-token: ${WORLD_CUP_2026_API_BEARER_TOKEN:}

@@ -1,7 +1,9 @@
 package com.livekick.controller;
 
+import com.livekick.dto.ai.PredictionDto;
 import com.livekick.dto.football.FootballMatchDto;
 import com.livekick.dto.football.FootballMatchLiveDto;
+import com.livekick.service.ai.PredictionService;
 import com.livekick.service.football.FootballDataService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,9 +18,14 @@ import java.util.List;
 public class FootballMatchController {
 
     private final FootballDataService footballDataService;
+    private final PredictionService predictionService;
 
-    public FootballMatchController(FootballDataService footballDataService) {
+    public FootballMatchController(
+            FootballDataService footballDataService,
+            PredictionService predictionService
+    ) {
         this.footballDataService = footballDataService;
+        this.predictionService = predictionService;
     }
 
     @GetMapping
@@ -38,5 +45,10 @@ public class FootballMatchController {
     @GetMapping("/{id}/live")
     public FootballMatchLiveDto getMatchLiveState(@PathVariable Long id) {
         return footballDataService.getMatchLiveState(id);
+    }
+
+    @GetMapping("/{id}/prediction")
+    public PredictionDto getMatchPrediction(@PathVariable Long id) {
+        return predictionService.getPrediction(id);
     }
 }
