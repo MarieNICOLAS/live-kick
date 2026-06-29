@@ -13,6 +13,12 @@ public abstract class BusinessException extends RuntimeException {
         this.error = error;
     }
 
+    protected BusinessException(HttpStatus status, String error, String message, Throwable cause) {
+        super(message, cause);
+        this.status = status;
+        this.error = error;
+    }
+
     public HttpStatus getStatus() {
         return status;
     }
