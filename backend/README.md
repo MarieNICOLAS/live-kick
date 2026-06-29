@@ -31,7 +31,7 @@ cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
-Points d'entree :
+Pour tester les points d'entrée http://localhost:8080/swagger-ui/index.html :
 
 ```text
 GET /api/v1/status
