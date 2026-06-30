@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { MatchCard } from '../../components/football/MatchCard'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
@@ -17,6 +18,14 @@ const statusFilters: Array<{ label: string; value: CalendarFilter }> = [
   { label: 'Terminés', value: 'FINISHED' },
   { label: 'Dates futures', value: 'DATES_ONLY' },
 ]
+
+function getInitialStatusFilter(value: string | null): CalendarFilter {
+  if (value === 'LIVE' || value === 'HALF_TIME' || value === 'SCHEDULED' || value === 'POSTPONED' || value === 'FINISHED') {
+    return value
+  }
+
+  return 'ALL'
+}
 
 function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
   return new Date(second.matchDate).getTime() - new Date(first.matchDate).getTime()
@@ -76,9 +85,11 @@ function shouldShowMatchForFilter(footballMatch: FootballMatch, statusFilter: Ca
 }
 
 export function CalendarPage() {
+  const [searchParams] = useSearchParams()
+  const phaseFilter = searchParams.get('phase')
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
   const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
-  const [statusFilter, setStatusFilter] = useState<CalendarFilter>('ALL')
+  const [statusFilter, setStatusFilter] = useState<CalendarFilter>(() => getInitialStatusFilter(searchParams.get('status')))
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -125,8 +136,9 @@ export function CalendarPage() {
     () =>
       [...footballMatches]
         .filter((footballMatch) => shouldShowMatchForFilter(footballMatch, statusFilter))
+        .filter((footballMatch) => !phaseFilter || footballMatch.phase === phaseFilter || footballMatch.phaseType === phaseFilter)
         .sort(sortByCalendarPriority),
-    [footballMatches, statusFilter],
+    [footballMatches, phaseFilter, statusFilter],
   )
 
   if (isLoading) {
@@ -159,6 +171,8 @@ export function CalendarPage() {
           </button>
         ))}
       </div>
+
+      {phaseFilter ? <p className="data-warning">Filtre actif : {phaseFilter}</p> : null}
 
       {filteredMatches.length === 0 ? (
         <ErrorState title="Aucun match" message="Aucune rencontre ne correspond a ce filtre." />

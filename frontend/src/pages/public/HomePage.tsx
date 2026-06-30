@@ -161,10 +161,10 @@ export function HomePage() {
           </div>
         </div>
 
-        <article className="featured-match" aria-label="Match principal">
+        <Link className="featured-match featured-match--link" to={`/matches/${featuredMatch.id}`} aria-label="Voir le détail du match principal">
           <div className="featured-match__top">
             <StatusBadge status={featuredMatch.status} minute={featuredMatch.currentMinute} />
-            <span>Groupe {featuredMatch.groupCode}</span>
+            <span>Groupe {featuredMatch.groupCode ?? '-'}</span>
           </div>
           <Scoreboard footballMatch={featuredMatch} compact />
           <div className="featured-match__meta">
@@ -176,7 +176,7 @@ export function HomePage() {
             homeTeam={featuredMatch.homeTeam}
             awayTeam={featuredMatch.awayTeam}
           />
-        </article>
+        </Link>
       </div>
 
       <section className="dashboard-grid" aria-label="Aperçu LiveKick">
@@ -203,13 +203,13 @@ export function HomePage() {
           </div>
         </div>
 
-        <div className="dashboard-column">
+        <Link className="prediction-panel-link" to={`/matches/${featuredMatch.id}`} aria-label="Voir la prédiction détaillée du match">
           <PredictionPanel
             prediction={featuredPrediction}
             homeTeam={featuredMatch.homeTeam}
             awayTeam={featuredMatch.awayTeam}
           />
-        </div>
+        </Link>
 
         <div className="dashboard-column dashboard-column--wide">
           <div className="section-title">

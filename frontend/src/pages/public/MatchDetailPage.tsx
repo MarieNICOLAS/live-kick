@@ -9,15 +9,24 @@ import { Spinner } from '../../components/ui/Spinner'
 import { demoFootballMatches, demoPrediction } from '../../fixtures/liveKickDemoData'
 import { getFootballMatchById } from '../../services/matchService'
 import { getMatchPrediction } from '../../services/predictionService'
+import { getPlayers } from '../../services/playerService'
 import { getStadiumById } from '../../services/stadiumService'
-import type { FootballMatch, Prediction, Stadium } from '../../types/football'
-import { getCityDisplayName, getStadiumDisplayName } from '../../utils/displayNames'
+import type { FootballMatch, Player, Prediction, Stadium, TeamSummary } from '../../types/football'
+import { getCityDisplayName, getStadiumDisplayName, getTeamDisplayName } from '../../utils/displayNames'
 import { formatMatchStatus, formatMatchday, formatPhase } from '../../utils/formatters'
+
+type TeamSummaryWithId = TeamSummary & { id: number }
+
+function canLoadTeamPlayers(team: TeamSummary): team is TeamSummaryWithId {
+  return team.id !== null
+}
 
 export function MatchDetailPage() {
   const { id } = useParams()
   const [footballMatch, setFootballMatch] = useState<FootballMatch | null>(null)
   const [stadium, setStadium] = useState<Stadium | null>(null)
+  const [homePlayers, setHomePlayers] = useState<Player[]>([])
+  const [awayPlayers, setAwayPlayers] = useState<Player[]>([])
   const [prediction, setPrediction] = useState<Prediction>(demoPrediction)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -62,10 +71,29 @@ export function MatchDetailPage() {
             setPrediction({ ...demoPrediction, matchId: matchResponse.id })
           }
         }
+
+        try {
+          const [homePlayersResponse, awayPlayersResponse] = await Promise.all([
+            canLoadTeamPlayers(matchResponse.homeTeam) ? getPlayers(matchResponse.homeTeam.id) : Promise.resolve([]),
+            canLoadTeamPlayers(matchResponse.awayTeam) ? getPlayers(matchResponse.awayTeam.id) : Promise.resolve([]),
+          ])
+
+          if (isMounted) {
+            setHomePlayers(homePlayersResponse.slice(0, 11))
+            setAwayPlayers(awayPlayersResponse.slice(0, 11))
+          }
+        } catch {
+          if (isMounted) {
+            setHomePlayers([])
+            setAwayPlayers([])
+          }
+        }
       } catch {
         if (isMounted) {
           setFootballMatch(demoFootballMatches.find((item) => String(item.id) === id) ?? null)
           setStadium(null)
+          setHomePlayers([])
+          setAwayPlayers([])
         }
       } finally {
         if (isMounted) {
@@ -108,14 +136,22 @@ export function MatchDetailPage() {
       <div className="match-detail-hero">
         <div className="match-detail-hero__meta">
           <StatusBadge status={footballMatch.status} minute={footballMatch.currentMinute} />
-          <span>Groupe {footballMatch.groupCode}</span>
+          {footballMatch.groupCode ? (
+            <Link to={`/groups/${footballMatch.groupCode}`}>Groupe {footballMatch.groupCode}</Link>
+          ) : (
+            <span>Groupe -</span>
+          )}
           <span>{formatMatchday(footballMatch.matchday)}</span>
         </div>
-        <Scoreboard footballMatch={footballMatch} />
+        <Scoreboard footballMatch={footballMatch} compact />
         <p>
-          {stadium
-            ? `${getStadiumDisplayName(stadium)}, ${getCityDisplayName(stadium.city)}`
-            : 'Stade à confirmer'}{' '}
+          {stadium ? (
+            <Link to={`/stadiums/${stadium.id}`}>
+              {getStadiumDisplayName(stadium)}, {getCityDisplayName(stadium.city)}
+            </Link>
+          ) : (
+            'Stade à confirmer'
+          )}{' '}
           - {formatPhase(footballMatch.phase)}
         </p>
       </div>
@@ -130,11 +166,19 @@ export function MatchDetailPage() {
             </div>
             <div>
               <dt>Statut</dt>
-              <dd>{formatMatchStatus(footballMatch.status, footballMatch.currentMinute)}</dd>
+              <dd>
+                <Link className="metric-link" to={`/calendar?status=${footballMatch.status}`}>
+                  {formatMatchStatus(footballMatch.status, footballMatch.currentMinute)}
+                </Link>
+              </dd>
             </div>
             <div>
               <dt>Phase</dt>
-              <dd>{formatPhase(footballMatch.phaseType)}</dd>
+              <dd>
+                <Link className="metric-link" to={`/calendar?phase=${footballMatch.phaseType}`}>
+                  {formatPhase(footballMatch.phaseType)}
+                </Link>
+              </dd>
             </div>
           </dl>
         </section>
@@ -144,7 +188,43 @@ export function MatchDetailPage() {
           homeTeam={footballMatch.homeTeam}
           awayTeam={footballMatch.awayTeam}
         />
+
+        <section className="players-panel dashboard-column--wide">
+          <div className="players-panel__header">
+            <h2>Joueurs du match</h2>
+            <span>Compositions probables</span>
+          </div>
+
+          <div className="players-grid">
+            <TeamPlayersList team={footballMatch.homeTeam} players={homePlayers} />
+            <TeamPlayersList team={footballMatch.awayTeam} players={awayPlayers} />
+          </div>
+        </section>
       </div>
     </section>
+  )
+}
+
+function TeamPlayersList({ team, players }: { team: TeamSummary; players: Player[] }) {
+  return (
+    <article className="team-players">
+      <Link to={team.id === null ? '/teams' : `/teams/${team.id}`}>
+        {getTeamDisplayName(team)}
+      </Link>
+
+      {players.length > 0 ? (
+        <ul>
+          {players.map((player) => (
+            <li key={player.id}>
+              <span>{player.shirtNumber ?? '-'}</span>
+              <strong>{player.firstName} {player.lastName}</strong>
+              <em>{player.position}</em>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>Joueurs indisponibles pour le moment.</p>
+      )}
+    </article>
   )
 }

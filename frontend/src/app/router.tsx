@@ -41,6 +41,14 @@ const router = createBrowserRouter([
         element: <GroupsPage />,
       },
       {
+        path: 'groups/:code',
+        element: <SimplePage eyebrow="Groupe" title="Détail du groupe" message="Le détail du groupe sera enrichi avec ses matchs, son classement et les scénarios de qualification." />,
+      },
+      {
+        path: 'stadiums/:id',
+        element: <SimplePage eyebrow="Stade" title="Fiche stade" message="La fiche stade affichera bientôt la ville, la capacité, les matchs programmés et les informations pratiques." />,
+      },
+      {
         path: 'teams',
         element: <TeamsPage />,
       },
