@@ -2,7 +2,7 @@ import { CalendarClock, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { FootballMatch } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
-import { formatMatchDateTime } from '../../utils/formatters'
+import { formatMatchDateTime, formatPhase } from '../../utils/formatters'
 import { FavoriteButton } from './FavoriteButton'
 import { Scoreboard } from './Scoreboard'
 import { StatusBadge } from './StatusBadge'
@@ -24,7 +24,9 @@ export function MatchCard({ footballMatch, venueLabel }: MatchCardProps) {
             Groupe {footballMatch.groupCode}
           </Link>
         ) : (
-          <span>Groupe -</span>
+          <Link className="inline-card-link" to={`/calendar?phase=${footballMatch.phaseType}`}>
+            {formatPhase(footballMatch.phase)}
+          </Link>
         )}
         <FavoriteButton type="MATCH" targetId={footballMatch.id} label="Ajouter ce match aux favoris" />
       </div>
@@ -36,7 +38,7 @@ export function MatchCard({ footballMatch, venueLabel }: MatchCardProps) {
       <div className="match-card__footer">
         <span>
           <CalendarClock size={15} aria-hidden="true" />
-          {formatMatchDateTime(footballMatch.matchDate)}
+          {formatMatchDateTime(footballMatch.matchDate, footballMatch.stadiumId)}
         </span>
         <span>
           <MapPin size={15} aria-hidden="true" />

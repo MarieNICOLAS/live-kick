@@ -7,6 +7,7 @@ import { demoFootballMatches } from '../../fixtures/liveKickDemoData'
 import { getFootballMatches } from '../../services/matchService'
 import { getStadiums } from '../../services/stadiumService'
 import type { FootballMatch, MatchStatus } from '../../types/football'
+import { getMatchTimestamp } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 type CalendarFilter = MatchStatus | 'ALL' | 'DATES_ONLY'
@@ -28,11 +29,11 @@ function getInitialStatusFilter(value: string | null): CalendarFilter {
 }
 
 function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
-  return new Date(second.matchDate).getTime() - new Date(first.matchDate).getTime()
+  return getMatchTimestamp(second.matchDate, second.stadiumId) - getMatchTimestamp(first.matchDate, first.stadiumId)
 }
 
 function sortByUpcomingMatchDate(first: FootballMatch, second: FootballMatch) {
-  return new Date(first.matchDate).getTime() - new Date(second.matchDate).getTime()
+  return getMatchTimestamp(first.matchDate, first.stadiumId) - getMatchTimestamp(second.matchDate, second.stadiumId)
 }
 
 const statusPriority: Record<MatchStatus, number> = {

@@ -16,18 +16,18 @@ import { getFootballMatches } from '../../services/matchService'
 import { getMatchPrediction } from '../../services/predictionService'
 import { getStadiums } from '../../services/stadiumService'
 import type { CompetitionGroup, FootballMatch, Prediction } from '../../types/football'
-import { formatMatchday } from '../../utils/formatters'
+import { formatMatchday, getMatchTimestamp } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
-  return new Date(first.matchDate).getTime() - new Date(second.matchDate).getTime()
+  return getMatchTimestamp(first.matchDate, first.stadiumId) - getMatchTimestamp(second.matchDate, second.stadiumId)
 }
 
 function pickFeaturedMatch(footballMatches: FootballMatch[]) {
   const now = Date.now()
   const liveMatch = footballMatches.find((footballMatch) => footballMatch.status === 'LIVE')
   const nextMatch = footballMatches
-    .filter((footballMatch) => new Date(footballMatch.matchDate).getTime() >= now)
+    .filter((footballMatch) => getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId) >= now)
     .sort(sortByMatchDate)[0]
 
   return liveMatch ?? nextMatch ?? footballMatches[0]

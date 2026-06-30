@@ -8,7 +8,7 @@ import { getFootballMatches } from '../../services/matchService'
 import { getStadiums } from '../../services/stadiumService'
 import type { FootballMatch } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
-import { formatMatchDateTime } from '../../utils/formatters'
+import { formatMatchDateTime, getMatchTimestamp } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 type ReminderOffset = 60 | 5
@@ -21,7 +21,7 @@ type Reminder = {
 const reminderStorageKey = 'livekick-match-reminders'
 
 function sortByKickoffDate(first: FootballMatch, second: FootballMatch) {
-  return new Date(first.matchDate).getTime() - new Date(second.matchDate).getTime()
+  return getMatchTimestamp(first.matchDate, first.stadiumId) - getMatchTimestamp(second.matchDate, second.stadiumId)
 }
 
 function getReminderKey(matchId: number, offsetMinutes: ReminderOffset) {
@@ -37,8 +37,8 @@ function readStoredReminders(): Reminder[] {
   }
 }
 
-function formatCountdown(matchDate: string, now: number) {
-  const diffMs = Math.max(0, new Date(matchDate).getTime() - now)
+function formatCountdown(footballMatch: FootballMatch, now: number) {
+  const diffMs = Math.max(0, getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId) - now)
   const totalHours = Math.floor(diffMs / (1000 * 60 * 60))
   const days = Math.floor(totalHours / 24)
   const hours = totalHours % 24
@@ -153,7 +153,7 @@ export function LivePage() {
           return null
         }
 
-        const triggerTime = new Date(footballMatch.matchDate).getTime() - reminder.offsetMinutes * 60_000
+        const triggerTime = getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId) - reminder.offsetMinutes * 60_000
         const delay = triggerTime - now
         if (delay <= 0) {
           return null
@@ -178,7 +178,7 @@ export function LivePage() {
     () =>
       footballMatches
         .filter((footballMatch) => {
-          const kickoffTime = new Date(footballMatch.matchDate).getTime()
+          const kickoffTime = getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId)
           return footballMatch.status === 'SCHEDULED' && kickoffTime >= now
         })
         .sort(sortByKickoffDate)
@@ -252,11 +252,11 @@ export function LivePage() {
               <div className="live-upcoming-card__header">
                 <div>
                   <span className="eyebrow">Prochain direct</span>
-                  <strong>{formatMatchDateTime(footballMatch.matchDate)}</strong>
+                  <strong>{formatMatchDateTime(footballMatch.matchDate, footballMatch.stadiumId)}</strong>
                 </div>
                 <div className="live-countdown" aria-label="Décompte avant le direct">
                   <Clock3 size={18} aria-hidden="true" />
-                  {formatCountdown(footballMatch.matchDate, now)}
+                  {formatCountdown(footballMatch, now)}
                 </div>
               </div>
 
