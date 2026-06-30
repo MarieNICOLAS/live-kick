@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import { HomePage } from '../pages/public/HomePage'
 import { MatchesPage } from '../pages/public/MatchesPage'
+import { GroupsPage } from '../pages/public/GroupsPage'
 import { NotFoundPage } from '../pages/errors/NotFoundPage'
 
 const router = createBrowserRouter([
@@ -16,6 +17,10 @@ const router = createBrowserRouter([
       {
         path: 'matches',
         element: <MatchesPage />,
+      },
+      {
+        path: 'groups',
+        element: <GroupsPage />,
       },
       {
         path: '*',

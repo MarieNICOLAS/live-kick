@@ -1,19 +1,20 @@
 import { apiClient } from './apiClient'
 
 export interface GroupStandingDto {
-  team: { id: number; name: string; flagUrl: string; code: string }
-  played: number
-  won: number
-  drawn: number
-  lost: number
+  team: { id: number; name: string; flagUrl: string; fifaCode: string }
+  matchesPlayed: number
+  wins: number
+  draws: number
+  losses: number
   goalsFor: number
   goalsAgainst: number
+  goalDifference: number
   points: number
 }
 
 export interface CompetitionGroupDto {
   code: string
-  name: string
+  displayOrder: number
   standings: GroupStandingDto[]
 }
 
