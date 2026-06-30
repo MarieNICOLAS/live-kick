@@ -9,6 +9,7 @@ import { BracketPage } from '../pages/public/BracketPage'
 import { TeamsPage } from '../pages/public/TeamsPage'
 import { TeamDetailPage } from '../pages/public/TeamDetailPage'
 import { FavoritesPage } from '../pages/public/FavoritesPage'
+import { LivePage } from '../pages/public/LivePage'
 import { NotFoundPage } from '../pages/errors/NotFoundPage'
 
 const router = createBrowserRouter([
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
       { path: 'teams', element: <TeamsPage /> },
       { path: 'teams/:id', element: <TeamDetailPage /> },
       { path: 'favorites', element: <FavoritesPage /> },
+      { path: 'live', element: <LivePage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
