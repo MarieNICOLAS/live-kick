@@ -5,6 +5,7 @@ import { MatchesPage } from '../pages/public/MatchesPage'
 import { GroupsPage } from '../pages/public/GroupsPage'
 import { BracketPage } from '../pages/public/BracketPage'
 import { TeamsPage } from '../pages/public/TeamsPage'
+import { FavoritesPage } from '../pages/public/FavoritesPage'
 import { NotFoundPage } from '../pages/errors/NotFoundPage'
 
 const router = createBrowserRouter([
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
       { path: 'groups', element: <GroupsPage /> },
       { path: 'bracket', element: <BracketPage /> },
       { path: 'teams', element: <TeamsPage /> },
+      { path: 'favorites', element: <FavoritesPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
