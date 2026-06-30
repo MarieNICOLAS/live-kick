@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getGroups } from '../../services/groupService'
 import type { CompetitionGroupDto } from '../../services/groupService'
 import { Spinner } from '../../components/ui/Spinner'
@@ -6,6 +7,7 @@ import { ErrorState } from '../../components/ui/ErrorState'
 import '../../styles/groups.css'
 
 export function GroupsPage() {
+  const navigate = useNavigate()
   const [groups, setGroups] = useState<CompetitionGroupDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +47,12 @@ export function GroupsPage() {
 
       <div className="groups-page-grid">
         {groups.map((group) => (
-          <div key={group.code} className="groups-page-card">
+          <div
+            key={group.code}
+            className="groups-page-card"
+            onClick={() => navigate(`/groups/${group.code}`)}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="groups-page-card-header">
               <h2>Groupe {group.code}</h2>
             </div>

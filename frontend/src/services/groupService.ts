@@ -22,3 +22,8 @@ export async function getGroups(): Promise<CompetitionGroupDto[]> {
   const response = await apiClient.get<CompetitionGroupDto[]>('/groups')
   return response.data
 }
+
+export async function getGroup(code: string): Promise<CompetitionGroupDto> {
+  const response = await apiClient.get<CompetitionGroupDto>(`/groups/${code}`)
+  return response.data
+}

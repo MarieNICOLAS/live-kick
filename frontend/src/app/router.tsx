@@ -4,6 +4,7 @@ import { HomePage } from '../pages/public/HomePage'
 import { MatchesPage } from '../pages/public/MatchesPage'
 import { MatchDetailPage } from '../pages/public/MatchDetailPage'
 import { GroupsPage } from '../pages/public/GroupsPage'
+import { GroupDetailPage } from '../pages/public/GroupDetailPage'
 import { BracketPage } from '../pages/public/BracketPage'
 import { TeamsPage } from '../pages/public/TeamsPage'
 import { TeamDetailPage } from '../pages/public/TeamDetailPage'
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
       { path: 'matches', element: <MatchesPage /> },
       { path: 'matches/:id', element: <MatchDetailPage /> },
       { path: 'groups', element: <GroupsPage /> },
+      { path: 'groups/:code', element: <GroupDetailPage /> },
       { path: 'bracket', element: <BracketPage /> },
       { path: 'teams', element: <TeamsPage /> },
       { path: 'teams/:id', element: <TeamDetailPage /> },
