@@ -4,6 +4,7 @@ import type { FootballMatch } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
 import { formatMatchDateTime, formatPhase } from '../../utils/formatters'
 import { FavoriteButton } from './FavoriteButton'
+import { MatchReminderButton } from './MatchReminderButton'
 import { Scoreboard } from './Scoreboard'
 import { StatusBadge } from './StatusBadge'
 
@@ -28,7 +29,10 @@ export function MatchCard({ footballMatch, venueLabel }: MatchCardProps) {
             {formatPhase(footballMatch.phase)}
           </Link>
         )}
-        <FavoriteButton type="MATCH" targetId={footballMatch.id} label="Ajouter ce match aux favoris" />
+        <div className="match-card__actions">
+          <MatchReminderButton footballMatch={footballMatch} />
+          <FavoriteButton type="MATCH" targetId={footballMatch.id} label="Ajouter ce match aux favoris" />
+        </div>
       </div>
 
       <div className="match-card__link">

@@ -4,37 +4,17 @@ import { MatchCard } from '../../components/football/MatchCard'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
 import { demoFootballMatches } from '../../fixtures/liveKickDemoData'
+import { useMatchReminders } from '../../hooks/useMatchReminders'
 import { getFootballMatches } from '../../services/matchService'
 import { getStadiums } from '../../services/stadiumService'
+import { useNotificationsStore } from '../../stores/notificationsStore'
 import type { FootballMatch } from '../../types/football'
-import { getTeamDisplayName } from '../../utils/displayNames'
 import { formatMatchDateTime, getMatchTimestamp } from '../../utils/formatters'
+import { getMatchLabel, type ReminderOffset } from '../../utils/matchReminders'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
-
-type ReminderOffset = 60 | 5
-
-type Reminder = {
-  matchId: number
-  offsetMinutes: ReminderOffset
-}
-
-const reminderStorageKey = 'livekick-match-reminders'
 
 function sortByKickoffDate(first: FootballMatch, second: FootballMatch) {
   return getMatchTimestamp(first.matchDate, first.stadiumId) - getMatchTimestamp(second.matchDate, second.stadiumId)
-}
-
-function getReminderKey(matchId: number, offsetMinutes: ReminderOffset) {
-  return `${matchId}:${offsetMinutes}`
-}
-
-function readStoredReminders(): Reminder[] {
-  try {
-    const rawValue = localStorage.getItem(reminderStorageKey)
-    return rawValue ? JSON.parse(rawValue) : []
-  } catch {
-    return []
-  }
 }
 
 function formatCountdown(footballMatch: FootballMatch, now: number) {
@@ -49,20 +29,6 @@ function formatCountdown(footballMatch: FootballMatch, now: number) {
   }
 
   return `${days} j - ${hours} h`
-}
-
-function getMatchLabel(footballMatch: FootballMatch) {
-  return `${getTeamDisplayName(footballMatch.homeTeam)} - ${getTeamDisplayName(footballMatch.awayTeam)}`
-}
-
-function sendMatchNotification(footballMatch: FootballMatch, offsetMinutes: ReminderOffset) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') {
-    return
-  }
-
-  new Notification('LiveKick - Match bientôt en direct', {
-    body: `${getMatchLabel(footballMatch)} commence dans ${offsetMinutes === 60 ? '1 heure' : '5 minutes'}.`,
-  })
 }
 
 function ReminderButton({
@@ -92,10 +58,11 @@ function ReminderButton({
 export function LivePage() {
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
   const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
-  const [reminders, setReminders] = useState<Reminder[]>(() => readStoredReminders())
+  const { hasReminder, toggleReminder: toggleStoredReminder } = useMatchReminders()
   const [now, setNow] = useState(() => Date.now())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const addNotification = useNotificationsStore((state) => state.addNotification)
 
   useEffect(() => {
     let isMounted = true
@@ -141,31 +108,6 @@ export function LivePage() {
     return () => window.clearInterval(intervalId)
   }, [])
 
-  useEffect(() => {
-    localStorage.setItem(reminderStorageKey, JSON.stringify(reminders))
-  }, [reminders])
-
-  useEffect(() => {
-    const timeoutIds = reminders
-      .map((reminder) => {
-        const footballMatch = footballMatches.find((match) => match.id === reminder.matchId)
-        if (!footballMatch) {
-          return null
-        }
-
-        const triggerTime = getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId) - reminder.offsetMinutes * 60_000
-        const delay = triggerTime - now
-        if (delay <= 0) {
-          return null
-        }
-
-        return window.setTimeout(() => sendMatchNotification(footballMatch, reminder.offsetMinutes), delay)
-      })
-      .filter((timeoutId): timeoutId is number => timeoutId !== null)
-
-    return () => timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId))
-  }, [footballMatches, now, reminders])
-
   const liveMatches = useMemo(
     () =>
       footballMatches
@@ -186,30 +128,22 @@ export function LivePage() {
     [footballMatches, now],
   )
 
-  function isReminderActive(matchId: number, offsetMinutes: ReminderOffset) {
-    const key = getReminderKey(matchId, offsetMinutes)
-    return reminders.some((reminder) => getReminderKey(reminder.matchId, reminder.offsetMinutes) === key)
-  }
-
   async function toggleReminder(matchId: number, offsetMinutes: ReminderOffset) {
     if ('Notification' in window && Notification.permission === 'default') {
       await Notification.requestPermission()
     }
 
-    const key = getReminderKey(matchId, offsetMinutes)
-    setReminders((currentReminders) => {
-      const exists = currentReminders.some(
-        (reminder) => getReminderKey(reminder.matchId, reminder.offsetMinutes) === key,
-      )
+    const isActive = toggleStoredReminder(matchId, offsetMinutes)
 
-      if (exists) {
-        return currentReminders.filter(
-          (reminder) => getReminderKey(reminder.matchId, reminder.offsetMinutes) !== key,
-        )
-      }
-
-      return [...currentReminders, { matchId, offsetMinutes }]
-    })
+    const footballMatch = footballMatches.find((match) => match.id === matchId)
+    if (footballMatch) {
+      addNotification({
+        type: 'MATCH',
+        title: isActive ? 'Rappel de match activé' : 'Rappel de match désactivé',
+        message: `${getMatchLabel(footballMatch)} : alerte ${isActive ? 'prévue' : 'retirée'} ${offsetMinutes === 60 ? '1 h' : '5 min'} avant le coup d’envoi.`,
+        targetLink: `/matches/${footballMatch.id}`,
+      })
+    }
   }
 
   if (isLoading) {
@@ -267,12 +201,12 @@ export function LivePage() {
 
               <div className="reminder-actions" aria-label="Rappels du match">
                 <ReminderButton
-                  active={isReminderActive(footballMatch.id, 60)}
+                  active={hasReminder(footballMatch.id, 60)}
                   offsetMinutes={60}
                   onClick={() => toggleReminder(footballMatch.id, 60)}
                 />
                 <ReminderButton
-                  active={isReminderActive(footballMatch.id, 5)}
+                  active={hasReminder(footballMatch.id, 5)}
                   offsetMinutes={5}
                   onClick={() => toggleReminder(footballMatch.id, 5)}
                 />

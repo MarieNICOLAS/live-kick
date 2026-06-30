@@ -2,6 +2,7 @@ import { Activity, Bell, CalendarDays, Home, Moon, Search, Star, Sun, Trophy } f
 import { NavLink } from 'react-router-dom'
 import { useTheme } from '../../app/themeContext'
 import iconLogo from '../../assets/logos/simply-color-logo.png'
+import { useNotificationsStore } from '../../stores/notificationsStore'
 
 const mainLinks = [
   { to: '/', label: 'Accueil' },
@@ -22,6 +23,7 @@ const mobileLinks = [
 
 export function Header() {
   const { theme, toggleTheme } = useTheme()
+  const unreadCount = useNotificationsStore((state) => state.unreadCount())
   const ThemeIcon = theme === 'dark' ? Sun : Moon
 
   return (
@@ -33,10 +35,10 @@ export function Header() {
         </NavLink>
 
         <div className="header-tools">
-          <button className="icon-button notification-button" type="button" aria-label="Notifications">
+          <NavLink className="icon-button notification-button" to="/notifications" aria-label="Notifications">
             <Bell size={20} aria-hidden="true" />
-            <span>3</span>
-          </button>
+            {unreadCount > 0 ? <span>{unreadCount}</span> : null}
+          </NavLink>
 
           <button className="icon-button" type="button" onClick={toggleTheme} aria-label="Changer de theme">
             <ThemeIcon size={20} aria-hidden="true" />
@@ -65,10 +67,10 @@ export function Header() {
             <kbd>/</kbd>
           </label>
 
-          <button className="icon-button notification-button" type="button" aria-label="Notifications">
+          <NavLink className="icon-button notification-button" to="/notifications" aria-label="Notifications">
             <Bell size={21} aria-hidden="true" />
-            <span>3</span>
-          </button>
+            {unreadCount > 0 ? <span>{unreadCount}</span> : null}
+          </NavLink>
 
           <button className="icon-button" type="button" onClick={toggleTheme} aria-label="Changer de theme">
             <ThemeIcon size={21} aria-hidden="true" />

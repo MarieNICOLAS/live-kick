@@ -2,12 +2,16 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import { CalendarPage } from '../pages/public/CalendarPage'
 import { FavoritesPage } from '../pages/public/FavoritesPage'
+import { GroupDetailPage } from '../pages/public/GroupDetailPage'
 import { GroupsPage } from '../pages/public/GroupsPage'
 import { HomePage } from '../pages/public/HomePage'
 import { LivePage } from '../pages/public/LivePage'
 import { MatchDetailPage } from '../pages/public/MatchDetailPage'
-import { SimplePage } from '../pages/public/SimplePage'
+import { NotificationsPage } from '../pages/public/NotificationsPage'
+import { PlayerDetailPage } from '../pages/public/PlayerDetailPage'
 import { StatsPage } from '../pages/public/StatsPage'
+import { StadiumDetailPage } from '../pages/public/StadiumDetailPage'
+import { TeamDetailPage } from '../pages/public/TeamDetailPage'
 import { TeamsPage } from '../pages/public/TeamsPage'
 import { NotFoundPage } from '../pages/errors/NotFoundPage'
 
@@ -42,11 +46,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'groups/:code',
-        element: <SimplePage eyebrow="Groupe" title="Détail du groupe" message="Le détail du groupe sera enrichi avec ses matchs, son classement et les scénarios de qualification." />,
+        element: <GroupDetailPage />,
       },
       {
         path: 'stadiums/:id',
-        element: <SimplePage eyebrow="Stade" title="Fiche stade" message="La fiche stade affichera bientôt la ville, la capacité, les matchs programmés et les informations pratiques." />,
+        element: <StadiumDetailPage />,
       },
       {
         path: 'teams',
@@ -54,7 +58,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'teams/:id',
-        element: <SimplePage eyebrow="Équipe" title="Fiche équipe" message="La fiche détaillée de l'équipe sera connectée au service des équipes et des joueurs." />,
+        element: <TeamDetailPage />,
+      },
+      {
+        path: 'players/:id',
+        element: <PlayerDetailPage />,
       },
       {
         path: 'stats',
@@ -63,6 +71,10 @@ const router = createBrowserRouter([
       {
         path: 'favorites',
         element: <FavoritesPage />,
+      },
+      {
+        path: 'notifications',
+        element: <NotificationsPage />,
       },
       {
         path: '*',

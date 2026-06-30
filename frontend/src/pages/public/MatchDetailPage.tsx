@@ -217,7 +217,9 @@ function TeamPlayersList({ team, players }: { team: TeamSummary; players: Player
           {players.map((player) => (
             <li key={player.id}>
               <span>{player.shirtNumber ?? '-'}</span>
-              <strong>{player.firstName} {player.lastName}</strong>
+              <strong>
+                <Link to={`/players/${player.id}`}>{player.firstName} {player.lastName}</Link>
+              </strong>
               <em>{player.position}</em>
             </li>
           ))}

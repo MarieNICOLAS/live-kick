@@ -88,6 +88,7 @@ function shouldShowMatchForFilter(footballMatch: FootballMatch, statusFilter: Ca
 export function CalendarPage() {
   const [searchParams] = useSearchParams()
   const phaseFilter = searchParams.get('phase')
+  const groupFilter = searchParams.get('group')
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
   const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
   const [statusFilter, setStatusFilter] = useState<CalendarFilter>(() => getInitialStatusFilter(searchParams.get('status')))
@@ -137,9 +138,10 @@ export function CalendarPage() {
     () =>
       [...footballMatches]
         .filter((footballMatch) => shouldShowMatchForFilter(footballMatch, statusFilter))
+        .filter((footballMatch) => !groupFilter || footballMatch.groupCode === groupFilter.toUpperCase())
         .filter((footballMatch) => !phaseFilter || footballMatch.phase === phaseFilter || footballMatch.phaseType === phaseFilter)
         .sort(sortByCalendarPriority),
-    [footballMatches, phaseFilter, statusFilter],
+    [footballMatches, groupFilter, phaseFilter, statusFilter],
   )
 
   if (isLoading) {
@@ -174,6 +176,7 @@ export function CalendarPage() {
       </div>
 
       {phaseFilter ? <p className="data-warning">Filtre actif : {phaseFilter}</p> : null}
+      {groupFilter ? <p className="data-warning">Groupe actif : {groupFilter.toUpperCase()}</p> : null}
 
       {filteredMatches.length === 0 ? (
         <ErrorState title="Aucun match" message="Aucune rencontre ne correspond a ce filtre." />
