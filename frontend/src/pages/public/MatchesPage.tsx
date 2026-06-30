@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Heart, Search } from 'lucide-react'
 import { getMatches } from '../../services/matchService'
 import type { FootballMatchDto } from '../../services/matchService'
@@ -13,6 +14,7 @@ import '../../styles/matches.css'
 type StatusFilter = 'ALL' | 'LIVE' | 'SCHEDULED' | 'FINISHED'
 
 export function MatchesPage() {
+  const navigate = useNavigate()
   const [matches, setMatches] = useState<FootballMatchDto[]>([])
   const [groups, setGroups] = useState<CompetitionGroupDto[]>([])
   const [loading, setLoading] = useState(true)
@@ -130,11 +132,14 @@ export function MatchesPage() {
           <h2 className="matches-date-title">{date}</h2>
           <div className="matches-day-grid">
             {dateMatches.map((match) => (
-              <div key={match.id} className={`day-match-card ${match.status === 'LIVE' ? 'live' : ''}`}>
+              <div
+                key={match.id}
+                className={`day-match-card ${match.status === 'LIVE' ? 'live' : ''}`}
+                onClick={() => navigate(`/matches/${match.id}`)}
+              >
                 <div className="day-match-header">
                   <span className="day-match-meta">
-                    {phaseLabels[match.phase] ?? match.phase}
-                    {match.groupCode && match.groupCode.length === 1 ? ` · ${formatTime(match.matchDate)}` : ` · ${formatTime(match.matchDate)}`}
+                    {phaseLabels[match.phase] ?? match.phase} · {formatTime(match.matchDate)}
                   </span>
                   {match.status === 'LIVE' && <Badge variant="live">● LIVE {match.currentMinute}'</Badge>}
                   {match.status === 'SCHEDULED' && <Badge variant="warning">À venir</Badge>}
@@ -159,7 +164,10 @@ export function MatchesPage() {
                   <span className="day-match-stadium">📍 Stade {match.stadiumId}</span>
                   <button
                     className="day-match-favorite"
-                    onClick={() => toggleFavorite('MATCH', match.id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleFavorite('MATCH', match.id)
+                    }}
                     style={{ color: isFavorite('MATCH', match.id) ? 'var(--lk-accent)' : undefined }}
                   >
                     <Heart size={16} fill={isFavorite('MATCH', match.id) ? 'currentColor' : 'none'} />

@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import { HomePage } from '../pages/public/HomePage'
 import { MatchesPage } from '../pages/public/MatchesPage'
+import { MatchDetailPage } from '../pages/public/MatchDetailPage'
 import { GroupsPage } from '../pages/public/GroupsPage'
 import { BracketPage } from '../pages/public/BracketPage'
 import { TeamsPage } from '../pages/public/TeamsPage'
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'matches', element: <MatchesPage /> },
+      { path: 'matches/:id', element: <MatchDetailPage /> },
       { path: 'groups', element: <GroupsPage /> },
       { path: 'bracket', element: <BracketPage /> },
       { path: 'teams', element: <TeamsPage /> },
