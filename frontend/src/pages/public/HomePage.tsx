@@ -1,163 +1,193 @@
-import { useState } from 'react'
-import { Badge } from '../../components/ui/Badge'
+import { useEffect, useMemo, useState } from 'react'
+import { Activity, CalendarDays, Trophy } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { GroupStandingTable } from '../../components/football/GroupStandingTable'
+import { MatchCard } from '../../components/football/MatchCard'
+import { PredictionPanel } from '../../components/football/PredictionPanel'
+import { Scoreboard } from '../../components/football/Scoreboard'
+import { StatusBadge } from '../../components/football/StatusBadge'
 import { Button } from '../../components/ui/Button'
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
-import { EmptyState } from '../../components/ui/EmptyState'
 import { ErrorState } from '../../components/ui/ErrorState'
-import { Input } from '../../components/ui/Input'
-import { Modal } from '../../components/ui/Modal'
 import { Spinner } from '../../components/ui/Spinner'
-import { ValidationDialog } from '../../components/ui/ValidationDialog'
-import { FormShell } from '../../components/forms/FormShell'
-import simplyLogo from '../../assets/logos/simply-logo.png'
-import faviconLogo from '../../assets/logos/simply-color-logo.png'
-import horizontalDarkLogo from '../../assets/logos/logo-monochrome-dark.png'
-import horizontalDarkLogoAlt from '../../assets/logos/logo-monochrome-dark-2.png'
-import horizontalLightLogo from '../../assets/logos/logo-monochrome-light.png'
-import verticalLightLogo from '../../assets/logos/logo-vertical-lightmode.png'
-import verticalDarkLogo from '../../assets/logos/logo-vertical-darkmode.png'
+import { demoCompetitionGroups, demoFootballMatches, demoPrediction } from '../../fixtures/liveKickDemoData'
+import { getCompetitionGroups } from '../../services/groupService'
+import { getFootballMatches } from '../../services/matchService'
+import { getStadiums } from '../../services/stadiumService'
+import type { CompetitionGroup, FootballMatch } from '../../types/football'
+import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
+
+function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
+  return new Date(first.matchDate).getTime() - new Date(second.matchDate).getTime()
+}
+
+function pickFeaturedMatch(footballMatches: FootballMatch[]) {
+  const now = Date.now()
+  const liveMatch = footballMatches.find((footballMatch) => footballMatch.status === 'LIVE')
+  const nextMatch = footballMatches
+    .filter((footballMatch) => new Date(footballMatch.matchDate).getTime() >= now)
+    .sort(sortByMatchDate)[0]
+
+  return liveMatch ?? nextMatch ?? footballMatches[0]
+}
 
 export function HomePage() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isValidationOpen, setIsValidationOpen] = useState(false)
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
+  const [competitionGroups, setCompetitionGroups] = useState<CompetitionGroup[]>([])
+  const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadHomeData() {
+      try {
+        const [matchesResponse, groupsResponse, stadiumsResponse] = await Promise.all([
+          getFootballMatches(),
+          getCompetitionGroups(),
+          getStadiums(),
+        ])
+
+        if (!isMounted) {
+          return
+        }
+
+        setFootballMatches(matchesResponse)
+        setCompetitionGroups(groupsResponse)
+        setStadiumLabels(buildStadiumLabelMap(stadiumsResponse))
+        setError(null)
+      } catch {
+        if (!isMounted) {
+          return
+        }
+
+        setFootballMatches(demoFootballMatches)
+        setCompetitionGroups(demoCompetitionGroups)
+        setStadiumLabels({})
+        setError("L'API backend est indisponible, affichage des donnees de demonstration.")
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadHomeData()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const featuredMatch = useMemo(() => pickFeaturedMatch(footballMatches), [footballMatches])
+  const visibleMatches = useMemo(
+    () =>
+      [...footballMatches]
+        .sort(sortByMatchDate)
+        .filter((footballMatch) => footballMatch.status === 'LIVE' || footballMatch.status === 'SCHEDULED')
+        .slice(0, 6),
+    [footballMatches],
+  )
+  const firstGroup = competitionGroups[0]
+
+  if (isLoading) {
+    return (
+      <section className="page-section">
+        <Spinner label="Chargement des donnees LiveKick..." />
+      </section>
+    )
+  }
+
+  if (!featuredMatch) {
+    return (
+      <ErrorState
+        title="Aucun match disponible"
+        message="Le backend ne retourne pas encore de calendrier exploitable."
+      />
+    )
+  }
 
   return (
-    <section className="page-section">
-      <div className="preview-heading">
-        <span>Design system</span>
-        <h1>LiveKick 2026</h1>
+    <section className="home-page">
+      {error ? <p className="data-warning">{error}</p> : null}
+
+      <div className="home-hero">
+        <div className="home-hero__content">
+          <span className="eyebrow">
+            <Activity size={16} aria-hidden="true" />
+            Coupe du Monde 2026
+          </span>
+          <h1>LiveKick</h1>
+          <p>Scores instantanes, classements et prediction IA dans une interface mobile-first.</p>
+          <div className="home-hero__actions">
+            <Button as={Link} to="/calendar">
+              Voir le calendrier
+            </Button>
+            <Button as={Link} to={`/matches/${featuredMatch.id}`} variant="secondary">
+              Match center
+            </Button>
+          </div>
+        </div>
+
+        <article className="featured-match" aria-label="Match principal">
+          <div className="featured-match__top">
+            <StatusBadge status={featuredMatch.status} minute={featuredMatch.currentMinute} />
+            <span>Groupe {featuredMatch.groupCode}</span>
+          </div>
+          <Scoreboard footballMatch={featuredMatch} />
+          <div className="featured-match__meta">
+            <span>Matchday {featuredMatch.matchday}</span>
+            <span>{getStadiumLabel(stadiumLabels, featuredMatch.stadiumId)}</span>
+          </div>
+        </article>
       </div>
 
-      <section className="preview-panel">
-        <h2>Logos</h2>
-        <div className="logo-preview-grid">
-          <figure>
-            <img src={simplyLogo} alt="Logo icone LiveKick monochrome" />
-            <figcaption>Icone monochrome</figcaption>
-          </figure>
-          <figure>
-            <img src={faviconLogo} alt="Logo icone LiveKick couleur" />
-            <figcaption>Icone couleur</figcaption>
-          </figure>
-          <figure className="logo-wide">
-            <img src={horizontalDarkLogo} alt="Logo horizontal LiveKick sombre" />
-            <figcaption>Horizontal dark</figcaption>
-          </figure>
-          <figure className="logo-wide">
-            <img src={horizontalDarkLogoAlt} alt="Logo horizontal LiveKick sombre alternatif" />
-            <figcaption>Horizontal dark alternatif</figcaption>
-          </figure>
-          <figure className="logo-wide logo-on-dark">
-            <img src={horizontalLightLogo} alt="Logo horizontal LiveKick clair" />
-            <figcaption>Horizontal light</figcaption>
-          </figure>
-          <figure>
-            <img src={verticalLightLogo} alt="Logo vertical LiveKick clair" />
-            <figcaption>Vertical light</figcaption>
-          </figure>
-          <figure className="logo-on-dark">
-            <img src={verticalDarkLogo} alt="Logo vertical LiveKick sombre" />
-            <figcaption>Vertical dark</figcaption>
-          </figure>
+      <section className="dashboard-grid" aria-label="Apercu LiveKick">
+        <div className="dashboard-column dashboard-column--wide">
+          <div className="section-title">
+            <div>
+              <span className="eyebrow">
+                <CalendarDays size={16} aria-hidden="true" />
+                Scores first
+              </span>
+              <h2>Matchs a suivre</h2>
+            </div>
+            <Link to="/calendar">Tout voir</Link>
+          </div>
+
+          <div className="match-list">
+            {visibleMatches.map((footballMatch) => (
+              <MatchCard
+                key={footballMatch.id}
+                footballMatch={footballMatch}
+                venueLabel={getStadiumLabel(stadiumLabels, footballMatch.stadiumId)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="dashboard-column">
+          <PredictionPanel
+            prediction={demoPrediction}
+            homeTeam={featuredMatch.homeTeam}
+            awayTeam={featuredMatch.awayTeam}
+          />
+        </div>
+
+        <div className="dashboard-column dashboard-column--wide">
+          <div className="section-title">
+            <div>
+              <span className="eyebrow">
+                <Trophy size={16} aria-hidden="true" />
+                Classement
+              </span>
+              <h2>Groupes</h2>
+            </div>
+            <Link to="/groups">Voir les groupes</Link>
+          </div>
+          {firstGroup ? <GroupStandingTable group={firstGroup} /> : null}
         </div>
       </section>
-
-      <section className="preview-grid" aria-label="Apercu des composants">
-        <article className="preview-panel">
-          <h2>Boutons</h2>
-          <div className="preview-row">
-            <Button>Principal</Button>
-            <Button variant="secondary">Secondaire</Button>
-            <Button variant="danger">Danger</Button>
-            <Button variant="ghost">Discret</Button>
-          </div>
-        </article>
-
-        <article className="preview-panel">
-          <h2>Badges</h2>
-          <div className="preview-row">
-            <Badge>Defaut</Badge>
-            <Badge variant="live">Live</Badge>
-            <Badge variant="success">Succes</Badge>
-            <Badge variant="warning">Attention</Badge>
-            <Badge variant="danger">Erreur</Badge>
-          </div>
-        </article>
-
-        <article className="preview-panel">
-          <h2>Formulaire</h2>
-          <FormShell
-            title="Formulaire commun"
-            onSubmit={(event) => event.preventDefault()}
-            actions={
-              <>
-                <Button type="button" variant="secondary">
-                  Annuler
-                </Button>
-                <Button type="submit">Valider</Button>
-              </>
-            }
-          >
-            <Input label="Champ texte" name="previewText" placeholder="Saisir une valeur" />
-            <Input label="Champ avec erreur" name="previewError" value="" error="Message d'erreur" readOnly />
-          </FormShell>
-        </article>
-
-        <article className="preview-panel">
-          <h2>Etats</h2>
-          <div className="preview-stack">
-            <Spinner />
-            <EmptyState title="Aucun element" message="Cet espace est vide pour le moment." />
-            <ErrorState title="Erreur" message="Un probleme est survenu." />
-          </div>
-        </article>
-
-        <article className="preview-panel">
-          <h2>Popups</h2>
-          <div className="preview-row">
-            <Button type="button" onClick={() => setIsModalOpen(true)}>
-              Popup dynamique
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => setIsValidationOpen(true)}>
-              Validation
-            </Button>
-            <Button type="button" variant="danger" onClick={() => setIsConfirmOpen(true)}>
-              Supprimer
-            </Button>
-          </div>
-        </article>
-      </section>
-
-      <Modal
-        isOpen={isModalOpen}
-        title="Popup dynamique"
-        onClose={() => setIsModalOpen(false)}
-        footer={
-          <Button type="button" onClick={() => setIsModalOpen(false)}>
-            Fermer
-          </Button>
-        }
-      >
-        <p>Contenu libre et reutilisable selon le besoin.</p>
-      </Modal>
-
-      <ValidationDialog
-        isOpen={isValidationOpen}
-        message="Confirmer cette action ?"
-        onClose={() => setIsValidationOpen(false)}
-        onConfirm={() => setIsValidationOpen(false)}
-      />
-
-      <ConfirmDialog
-        isOpen={isConfirmOpen}
-        title="Suppression"
-        message="Cette action demande une confirmation."
-        confirmLabel="Supprimer"
-        danger
-        onCancel={() => setIsConfirmOpen(false)}
-        onConfirm={() => setIsConfirmOpen(false)}
-      />
     </section>
   )
 }
