@@ -283,8 +283,7 @@
 .prediction-panel,
 .standing-table,
 .team-card,
-.match-detail-hero,
-.live-empty-panel {
+.match-detail-hero {
   background: linear-gradient(145deg, rgba(20, 38, 58, 0.92), rgba(13, 27, 42, 0.94));
   border: 1px solid var(--lk-border);
   border-radius: 8px;
@@ -297,8 +296,7 @@
 :root[data-theme='light'] .prediction-panel,
 :root[data-theme='light'] .standing-table,
 :root[data-theme='light'] .team-card,
-:root[data-theme='light'] .match-detail-hero,
-:root[data-theme='light'] .live-empty-panel {
+:root[data-theme='light'] .match-detail-hero {
   background: var(--lk-elevated);
 }
 
@@ -349,24 +347,6 @@
   font-size: 14px;
   font-weight: 700;
   justify-content: space-between;
-}
-
-.live-empty-panel {
-  align-items: center;
-  display: flex;
-  gap: 18px;
-  justify-content: space-between;
-  padding: 20px;
-}
-
-.live-empty-panel div {
-  display: grid;
-  gap: 10px;
-}
-
-.live-empty-panel p {
-  color: var(--lk-text-secondary);
-  max-width: 680px;
 }
 
 .live-upcoming-card {
@@ -743,6 +723,46 @@
 .prediction-panel__bars {
   display: grid;
   gap: 12px;
+}
+
+.prediction-summary {
+  background: rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.prediction-summary__header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.prediction-summary__header span {
+  color: var(--lk-accent);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.prediction-summary__header strong {
+  color: var(--lk-text-primary);
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.prediction-summary__bars {
+  display: grid;
+  gap: 10px;
+}
+
+.prediction-summary p {
+  color: var(--lk-text-secondary);
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .probability-bar {
@@ -1248,7 +1268,6 @@
   .home-hero__content,
   .featured-match,
   .match-detail-hero,
-  .live-empty-panel,
   .info-panel,
   .prediction-panel,
   .match-card {
@@ -1262,8 +1281,7 @@
 
   .section-title,
   .home-hero__actions,
-  .match-card__meta,
-  .live-empty-panel {
+  .match-card__meta {
     align-items: flex-start;
     flex-direction: column;
   }

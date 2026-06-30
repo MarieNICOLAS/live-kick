@@ -7,7 +7,7 @@ type TeamFlagProps = {
 }
 
 export function TeamFlag({ team, compact = false }: TeamFlagProps) {
-  const code = team.fifaCode?.slice(0, 3) ?? 'ÀD'
+  const code = team.fifaCode?.slice(0, 3) ?? '-'
 
   return (
     <span className={compact ? 'team-flag team-flag--compact' : 'team-flag'} aria-label={getTeamDisplayName(team)}>

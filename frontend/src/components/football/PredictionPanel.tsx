@@ -2,6 +2,7 @@ import { BrainCircuit } from 'lucide-react'
 import type { Prediction, TeamSummary } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
 import { ProbabilityBar } from './ProbabilityBar'
+import { getPredictionInsight } from './PredictionSummary'
 
 type PredictionPanelProps = {
   prediction: Prediction
@@ -35,7 +36,7 @@ export function PredictionPanel({ prediction, homeTeam, awayTeam }: PredictionPa
         <ProbabilityBar label={getTeamDisplayName(awayTeam)} value={prediction.awayWinProbability} />
       </div>
 
-      <p>{prediction.explanation}</p>
+      <p>{getPredictionInsight(prediction, homeTeam, awayTeam)}</p>
       <span className="prediction-confidence">Confiance {Math.min(100, Math.max(0, Math.round(confidence)))}%</span>
     </aside>
   )

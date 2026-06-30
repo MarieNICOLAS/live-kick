@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Bell, BellRing, Clock3, Radio } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { MatchCard } from '../../components/football/MatchCard'
-import { StatusBadge } from '../../components/football/StatusBadge'
-import { Button } from '../../components/ui/Button'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
 import { demoFootballMatches } from '../../fixtures/liveKickDemoData'
@@ -246,18 +243,7 @@ export function LivePage() {
             />
           ))}
         </div>
-      ) : (
-        <section className="live-empty-panel">
-          <div>
-            <StatusBadge status="SCHEDULED" />
-            <h2>Aucun match en direct</h2>
-            <p>Les deux prochaines rencontres sont prêtes. Activez un rappel pour ne pas rater le coup d'envoi.</p>
-          </div>
-          <Button as={Link} to="/calendar" variant="secondary">
-            Voir le calendrier
-          </Button>
-        </section>
-      )}
+      ) : null}
 
       {liveMatches.length === 0 && upcomingMatches.length > 0 ? (
         <div className="match-list match-list--grid">

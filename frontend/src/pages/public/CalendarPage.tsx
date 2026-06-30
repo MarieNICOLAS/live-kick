@@ -8,15 +8,22 @@ import { getStadiums } from '../../services/stadiumService'
 import type { FootballMatch, MatchStatus } from '../../types/football'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
-const statusFilters: Array<{ label: string; value: MatchStatus | 'ALL' }> = [
+type CalendarFilter = MatchStatus | 'ALL' | 'DATES_ONLY'
+
+const statusFilters: Array<{ label: string; value: CalendarFilter }> = [
   { label: 'Tous', value: 'ALL' },
   { label: 'À venir', value: 'SCHEDULED' },
   { label: 'Direct', value: 'LIVE' },
   { label: 'Terminés', value: 'FINISHED' },
+  { label: 'Dates futures', value: 'DATES_ONLY' },
 ]
 
 function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
   return new Date(second.matchDate).getTime() - new Date(first.matchDate).getTime()
+}
+
+function sortByUpcomingMatchDate(first: FootballMatch, second: FootballMatch) {
+  return new Date(first.matchDate).getTime() - new Date(second.matchDate).getTime()
 }
 
 const statusPriority: Record<MatchStatus, number> = {
@@ -29,13 +36,49 @@ const statusPriority: Record<MatchStatus, number> = {
 
 function sortByCalendarPriority(first: FootballMatch, second: FootballMatch) {
   const statusOrder = statusPriority[first.status] - statusPriority[second.status]
-  return statusOrder === 0 ? sortByMatchDate(first, second) : statusOrder
+  if (statusOrder !== 0) {
+    return statusOrder
+  }
+
+  if (isUpcomingMatch(first) && isUpcomingMatch(second)) {
+    return sortByUpcomingMatchDate(first, second)
+  }
+
+  return sortByMatchDate(first, second)
+}
+
+function isUpcomingMatch(footballMatch: FootballMatch) {
+  return footballMatch.status === 'SCHEDULED' || footballMatch.status === 'POSTPONED'
+}
+
+function isKnownTeam(team: FootballMatch['homeTeam']) {
+  return team.id !== null && team.fifaCode !== null
+}
+
+function hasUnknownTeams(footballMatch: FootballMatch) {
+  return !isKnownTeam(footballMatch.homeTeam) || !isKnownTeam(footballMatch.awayTeam)
+}
+
+function isUnknownUpcomingMatch(footballMatch: FootballMatch) {
+  return isUpcomingMatch(footballMatch) && hasUnknownTeams(footballMatch)
+}
+
+function shouldShowMatchForFilter(footballMatch: FootballMatch, statusFilter: CalendarFilter) {
+  if (statusFilter === 'DATES_ONLY') {
+    return isUnknownUpcomingMatch(footballMatch)
+  }
+
+  if (isUnknownUpcomingMatch(footballMatch)) {
+    return false
+  }
+
+  return statusFilter === 'ALL' || footballMatch.status === statusFilter
 }
 
 export function CalendarPage() {
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
   const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
-  const [statusFilter, setStatusFilter] = useState<MatchStatus | 'ALL'>('ALL')
+  const [statusFilter, setStatusFilter] = useState<CalendarFilter>('ALL')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -81,7 +124,7 @@ export function CalendarPage() {
   const filteredMatches = useMemo(
     () =>
       [...footballMatches]
-        .filter((footballMatch) => statusFilter === 'ALL' || footballMatch.status === statusFilter)
+        .filter((footballMatch) => shouldShowMatchForFilter(footballMatch, statusFilter))
         .sort(sortByCalendarPriority),
     [footballMatches, statusFilter],
   )

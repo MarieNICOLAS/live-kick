@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { GroupStandingTable } from '../../components/football/GroupStandingTable'
 import { MatchCard } from '../../components/football/MatchCard'
 import { PredictionPanel } from '../../components/football/PredictionPanel'
+import { PredictionSummary } from '../../components/football/PredictionSummary'
 import { Scoreboard } from '../../components/football/Scoreboard'
 import { StatusBadge } from '../../components/football/StatusBadge'
 import { Button } from '../../components/ui/Button'
@@ -12,8 +13,9 @@ import { Spinner } from '../../components/ui/Spinner'
 import { demoCompetitionGroups, demoFootballMatches, demoPrediction } from '../../fixtures/liveKickDemoData'
 import { getCompetitionGroups } from '../../services/groupService'
 import { getFootballMatches } from '../../services/matchService'
+import { getMatchPrediction } from '../../services/predictionService'
 import { getStadiums } from '../../services/stadiumService'
-import type { CompetitionGroup, FootballMatch } from '../../types/football'
+import type { CompetitionGroup, FootballMatch, Prediction } from '../../types/football'
 import { formatMatchday } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
@@ -35,6 +37,7 @@ export function HomePage() {
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
   const [competitionGroups, setCompetitionGroups] = useState<CompetitionGroup[]>([])
   const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
+  const [featuredPrediction, setFeaturedPrediction] = useState<Prediction>(demoPrediction)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -81,6 +84,34 @@ export function HomePage() {
   }, [])
 
   const featuredMatch = useMemo(() => pickFeaturedMatch(footballMatches), [footballMatches])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadFeaturedPrediction() {
+      if (!featuredMatch) {
+        return
+      }
+
+      try {
+        const predictionResponse = await getMatchPrediction(featuredMatch.id)
+        if (isMounted) {
+          setFeaturedPrediction(predictionResponse)
+        }
+      } catch {
+        if (isMounted) {
+          setFeaturedPrediction({ ...demoPrediction, matchId: featuredMatch.id })
+        }
+      }
+    }
+
+    loadFeaturedPrediction()
+
+    return () => {
+      isMounted = false
+    }
+  }, [featuredMatch])
+
   const visibleMatches = useMemo(
     () =>
       [...footballMatches]
@@ -135,11 +166,16 @@ export function HomePage() {
             <StatusBadge status={featuredMatch.status} minute={featuredMatch.currentMinute} />
             <span>Groupe {featuredMatch.groupCode}</span>
           </div>
-          <Scoreboard footballMatch={featuredMatch} />
+          <Scoreboard footballMatch={featuredMatch} compact />
           <div className="featured-match__meta">
             <span>{formatMatchday(featuredMatch.matchday)}</span>
             <span>{getStadiumLabel(stadiumLabels, featuredMatch.stadiumId)}</span>
           </div>
+          <PredictionSummary
+            prediction={featuredPrediction}
+            homeTeam={featuredMatch.homeTeam}
+            awayTeam={featuredMatch.awayTeam}
+          />
         </article>
       </div>
 
@@ -169,7 +205,7 @@ export function HomePage() {
 
         <div className="dashboard-column">
           <PredictionPanel
-            prediction={demoPrediction}
+            prediction={featuredPrediction}
             homeTeam={featuredMatch.homeTeam}
             awayTeam={featuredMatch.awayTeam}
           />

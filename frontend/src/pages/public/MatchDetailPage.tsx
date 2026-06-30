@@ -126,7 +126,7 @@ export function MatchDetailPage() {
           <dl className="metric-grid">
             <div>
               <dt>Minute</dt>
-              <dd>{footballMatch.currentMinute ? `${footballMatch.currentMinute}'` : 'À venir'}</dd>
+              <dd>{footballMatch.currentMinute ? `${footballMatch.currentMinute}'` : '-'}</dd>
             </div>
             <div>
               <dt>Statut</dt>
