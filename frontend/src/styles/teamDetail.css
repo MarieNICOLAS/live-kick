@@ -1,0 +1,229 @@
+.team-detail-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--lk-text-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.back-link:hover { color: var(--lk-accent); }
+
+.team-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: var(--lk-elevated);
+  border: 1px solid var(--lk-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.team-detail-flag {
+  width: 64px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+
+.team-detail-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.team-detail-info h1 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--lk-text-primary);
+}
+
+.team-detail-meta {
+  font-size: 0.8rem;
+  color: var(--lk-text-muted);
+}
+
+.team-detail-favorite {
+  background: none;
+  border: 1px solid var(--lk-border);
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  cursor: pointer;
+  color: var(--lk-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.team-detail-favorite:hover { border-color: var(--lk-accent); }
+
+.team-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.team-stat-card {
+  background: var(--lk-elevated);
+  border: 1px solid var(--lk-border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--lk-accent);
+}
+
+.team-stat-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.team-stat-label {
+  font-size: 0.65rem;
+  color: var(--lk-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.team-stat-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--lk-text-primary);
+}
+
+.team-stat-value small {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--lk-text-muted);
+}
+
+.team-record-card {
+  background: var(--lk-elevated);
+  border: 1px solid var(--lk-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.record-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.record-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--lk-text-primary);
+}
+
+.record-win { color: var(--lk-success); }
+.record-draw { color: var(--lk-warning); }
+.record-loss { color: var(--lk-danger); }
+
+.record-label {
+  font-size: 0.65rem;
+  color: var(--lk-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.team-form-section h2 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--lk-text-primary);
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.team-form-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.team-form-match {
+  background: var(--lk-elevated);
+  border: 1px solid var(--lk-border);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: 28px 60px 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.team-form-match:hover { border-color: var(--lk-accent); }
+
+.result-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: white;
+}
+
+.result-win { background: var(--lk-success); }
+.result-draw { background: var(--lk-warning); }
+.result-loss { background: var(--lk-danger); }
+
+.team-form-date {
+  font-size: 0.72rem;
+  color: var(--lk-text-muted);
+}
+
+.team-form-opponent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--lk-text-primary);
+}
+
+.team-form-opponent img {
+  width: 22px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.team-form-score {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--lk-text-primary);
+}
+
+@media (max-width: 600px) {
+  .team-stats-grid { grid-template-columns: 1fr; }
+  .team-record-card { grid-template-columns: repeat(3, 1fr); }
+}

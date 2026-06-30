@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Heart, Search } from 'lucide-react'
 import { getTeams } from '../../services/teamService'
 import type { TeamDto } from '../../services/teamService'
@@ -12,6 +13,7 @@ import '../../styles/teams.css'
 type FormResult = 'W' | 'D' | 'L'
 
 export function TeamsPage() {
+  const navigate = useNavigate()
   const [teams, setTeams] = useState<TeamDto[]>([])
   const [matches, setMatches] = useState<FootballMatchDto[]>([])
   const [loading, setLoading] = useState(true)
@@ -110,7 +112,11 @@ export function TeamsPage() {
           const form = getTeamForm(team.id)
           const qualifPercent = getQualifPercent(form)
           return (
-            <div key={team.id} className={`team-card ${isFavorite('TEAM', team.id) ? 'is-favorite' : ''}`}>
+            <div
+              key={team.id}
+              className={`team-card ${isFavorite('TEAM', team.id) ? 'is-favorite' : ''}`}
+              onClick={() => navigate(`/teams/${team.id}`)}
+            >
               <div className="team-card-top">
                 {team.flagUrl && <img src={team.flagUrl} alt={team.name} className="team-card-flag" />}
                 <div className="team-card-info">
@@ -121,7 +127,10 @@ export function TeamsPage() {
                 </div>
                 <button
                   className="team-card-favorite"
-                  onClick={() => toggleFavorite('TEAM', team.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleFavorite('TEAM', team.id)
+                  }}
                   style={{ color: isFavorite('TEAM', team.id) ? 'var(--lk-accent)' : undefined }}
                 >
                   <Heart size={18} fill={isFavorite('TEAM', team.id) ? 'currentColor' : 'none'} />
