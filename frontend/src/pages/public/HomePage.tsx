@@ -348,10 +348,10 @@ export function HomePage() {
                               {standing.team.flagUrl && <img src={standing.team.flagUrl} alt={standing.team.name} className="flag-sm" />}
                               <span>{standing.team.name}</span>
                             </td>
-                            <td>{standing.played}</td>
-                            <td>{standing.won}</td>
-                            <td>{standing.drawn}</td>
-                            <td>{standing.lost}</td>
+                            <td>{standing.matchesPlayed}</td>
+                            <td>{standing.wins}</td>
+                            <td>{standing.draws}</td>
+                            <td>{standing.losses}</td>
                             <td><strong>{standing.points}</strong></td>
                           </tr>
                         ))}
