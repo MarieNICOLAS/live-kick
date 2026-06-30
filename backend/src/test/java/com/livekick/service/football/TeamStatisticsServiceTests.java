@@ -5,6 +5,7 @@ import com.livekick.dto.football.TeamComparisonDto;
 import com.livekick.dto.football.TeamDto;
 import com.livekick.dto.football.TeamStatisticsDto;
 import com.livekick.dto.football.TeamSummaryDto;
+import com.livekick.mapper.FrenchFootballLabelMapper;
 import com.livekick.repository.TeamStatisticsRepository;
 import org.junit.jupiter.api.Test;
 
@@ -20,10 +21,12 @@ class TeamStatisticsServiceTests {
 
     private final TeamStatisticsRepository teamStatisticsRepository = mock(TeamStatisticsRepository.class);
     private final FootballDataService footballDataService = mock(FootballDataService.class);
+    private final FrenchFootballLabelMapper labelMapper = new FrenchFootballLabelMapper();
 
     private final TeamStatisticsService service = new TeamStatisticsService(
             teamStatisticsRepository,
-            footballDataService
+            footballDataService,
+            labelMapper
     );
 
     @Test
@@ -103,7 +106,7 @@ class TeamStatisticsServiceTests {
         TeamComparisonDto comparison = service.compareTeams(franceId, brazilId);
 
         assertThat(comparison.firstTeamStatistics().team().name()).isEqualTo("France");
-        assertThat(comparison.secondTeamStatistics().team().name()).isEqualTo("Brazil");
+        assertThat(comparison.secondTeamStatistics().team().name()).isEqualTo("Brésil");
     }
 
     @Test

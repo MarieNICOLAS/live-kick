@@ -8,6 +8,7 @@ import com.livekick.dto.football.TeamDto;
 import com.livekick.exception.ResourceNotFoundException;
 import com.livekick.exception.ExternalServiceException;
 import com.livekick.integration.footballapi.WorldCup2026Client;
+import com.livekick.mapper.FrenchFootballLabelMapper;
 import com.livekick.mapper.WorldCup2026Mapper;
 import com.livekick.repository.FootballCacheRepository;
 import org.springframework.stereotype.Service;
@@ -25,15 +26,18 @@ public class FootballDataService {
 
     private final WorldCup2026Client worldCup2026Client;
     private final WorldCup2026Mapper mapper;
+    private final FrenchFootballLabelMapper labelMapper;
     private final FootballCacheRepository cacheRepository;
 
     public FootballDataService(
             WorldCup2026Client worldCup2026Client,
             WorldCup2026Mapper mapper,
+            FrenchFootballLabelMapper labelMapper,
             FootballCacheRepository cacheRepository
     ) {
         this.worldCup2026Client = worldCup2026Client;
         this.mapper = mapper;
+        this.labelMapper = labelMapper;
         this.cacheRepository = cacheRepository;
     }
 
@@ -56,6 +60,7 @@ public class FootballDataService {
 
         return teams.stream()
                 .filter(team -> groupCode == null || equalsIgnoreCase(team.groupCode(), groupCode))
+                .map(labelMapper::localize)
                 .sorted(Comparator.comparing(TeamDto::name, Comparator.nullsLast(String::compareToIgnoreCase)))
                 .toList();
     }
@@ -89,6 +94,7 @@ public class FootballDataService {
                 .filter(match -> groupCode == null || equalsIgnoreCase(match.groupCode(), groupCode))
                 .filter(match -> phase == null || equalsIgnoreCase(match.phase(), phase) || equalsIgnoreCase(match.phaseType(), phase))
                 .filter(match -> status == null || equalsIgnoreCase(match.status(), status))
+                .map(labelMapper::localize)
                 .sorted(Comparator.comparing(FootballMatchDto::id, Comparator.nullsLast(Long::compareTo)))
                 .toList();
     }
@@ -123,6 +129,7 @@ public class FootballDataService {
         }
 
         return groups.stream()
+                .map(labelMapper::localize)
                 .sorted(Comparator.comparing(CompetitionGroupDto::displayOrder, Comparator.nullsLast(Integer::compareTo)))
                 .toList();
     }
@@ -152,6 +159,7 @@ public class FootballDataService {
         }
 
         return stadiums.stream()
+                .map(labelMapper::localize)
                 .sorted(Comparator.comparing(StadiumDto::id, Comparator.nullsLast(Long::compareTo)))
                 .toList();
     }

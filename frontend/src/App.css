@@ -264,7 +264,8 @@
 }
 
 .home-page,
-.match-detail-page {
+.match-detail-page,
+.live-page {
   display: grid;
   gap: 24px;
 }
@@ -282,7 +283,8 @@
 .prediction-panel,
 .standing-table,
 .team-card,
-.match-detail-hero {
+.match-detail-hero,
+.live-empty-panel {
   background: linear-gradient(145deg, rgba(20, 38, 58, 0.92), rgba(13, 27, 42, 0.94));
   border: 1px solid var(--lk-border);
   border-radius: 8px;
@@ -295,7 +297,8 @@
 :root[data-theme='light'] .prediction-panel,
 :root[data-theme='light'] .standing-table,
 :root[data-theme='light'] .team-card,
-:root[data-theme='light'] .match-detail-hero {
+:root[data-theme='light'] .match-detail-hero,
+:root[data-theme='light'] .live-empty-panel {
   background: var(--lk-elevated);
 }
 
@@ -346,6 +349,85 @@
   font-size: 14px;
   font-weight: 700;
   justify-content: space-between;
+}
+
+.live-empty-panel {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.live-empty-panel div {
+  display: grid;
+  gap: 10px;
+}
+
+.live-empty-panel p {
+  color: var(--lk-text-secondary);
+  max-width: 680px;
+}
+
+.live-upcoming-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.live-upcoming-card__header,
+.reminder-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.live-upcoming-card__header strong {
+  color: var(--lk-text-primary);
+  display: block;
+  margin-top: 4px;
+}
+
+.live-countdown {
+  align-items: center;
+  background: rgba(0, 212, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  border-radius: 999px;
+  color: var(--lk-accent);
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 900;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.reminder-actions {
+  justify-content: flex-start;
+}
+
+.reminder-button {
+  align-items: center;
+  background: var(--lk-elevated);
+  border: 1px solid var(--lk-border);
+  border-radius: 999px;
+  color: var(--lk-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+.reminder-button--active {
+  background: rgba(245, 185, 66, 0.12);
+  border-color: rgba(245, 185, 66, 0.42);
+  color: var(--lk-warning);
 }
 
 .dashboard-grid {
@@ -1158,6 +1240,7 @@
 
   .home-page,
   .match-detail-page,
+  .live-page,
   .page-section {
     gap: 18px;
   }
@@ -1165,6 +1248,7 @@
   .home-hero__content,
   .featured-match,
   .match-detail-hero,
+  .live-empty-panel,
   .info-panel,
   .prediction-panel,
   .match-card {
@@ -1178,7 +1262,8 @@
 
   .section-title,
   .home-hero__actions,
-  .match-card__meta {
+  .match-card__meta,
+  .live-empty-panel {
     align-items: flex-start;
     flex-direction: column;
   }

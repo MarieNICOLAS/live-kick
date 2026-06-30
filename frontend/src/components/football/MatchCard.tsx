@@ -1,6 +1,7 @@
 import { CalendarClock, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { FootballMatch } from '../../types/football'
+import { formatMatchDateTime } from '../../utils/formatters'
 import { FavoriteButton } from './FavoriteButton'
 import { Scoreboard } from './Scoreboard'
 import { StatusBadge } from './StatusBadge'
@@ -8,15 +9,6 @@ import { StatusBadge } from './StatusBadge'
 type MatchCardProps = {
   footballMatch: FootballMatch
   venueLabel?: string
-}
-
-function formatMatchDate(value: string) {
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
 }
 
 export function MatchCard({ footballMatch, venueLabel }: MatchCardProps) {
@@ -35,11 +27,11 @@ export function MatchCard({ footballMatch, venueLabel }: MatchCardProps) {
       <div className="match-card__footer">
         <span>
           <CalendarClock size={15} aria-hidden="true" />
-          {formatMatchDate(footballMatch.matchDate)}
+          {formatMatchDateTime(footballMatch.matchDate)}
         </span>
         <span>
           <MapPin size={15} aria-hidden="true" />
-          {venueLabel ?? 'Stade a confirmer'}
+          {venueLabel ?? 'Stade à confirmer'}
         </span>
       </div>
     </article>

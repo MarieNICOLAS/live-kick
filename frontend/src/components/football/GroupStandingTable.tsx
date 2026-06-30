@@ -1,4 +1,5 @@
 import type { CompetitionGroup } from '../../types/football'
+import { getTeamDisplayName } from '../../utils/displayNames'
 import { TeamFlag } from './TeamFlag'
 
 type GroupStandingTableProps = {
@@ -10,7 +11,7 @@ export function GroupStandingTable({ group }: GroupStandingTableProps) {
     <section className="standing-table" aria-labelledby={`group-${group.code}`}>
       <div className="standing-table__header">
         <h2 id={`group-${group.code}`}>Groupe {group.code}</h2>
-        <span>{group.standings.length} equipes</span>
+        <span>{group.standings.length} équipes</span>
       </div>
 
       <div className="standing-table__scroll">
@@ -18,7 +19,7 @@ export function GroupStandingTable({ group }: GroupStandingTableProps) {
           <thead>
             <tr>
               <th scope="col">#</th>
-              <th scope="col">Equipe</th>
+              <th scope="col">Équipe</th>
               <th scope="col">J</th>
               <th scope="col">G</th>
               <th scope="col">N</th>
@@ -34,7 +35,7 @@ export function GroupStandingTable({ group }: GroupStandingTableProps) {
                 <td>
                   <span className="standing-team">
                     <TeamFlag team={standing.team} compact />
-                    {standing.team.name}
+                    {getTeamDisplayName(standing.team)}
                   </span>
                 </td>
                 <td>{standing.matchesPlayed}</td>

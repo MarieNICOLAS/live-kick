@@ -1,5 +1,6 @@
 import { BrainCircuit } from 'lucide-react'
 import type { Prediction, TeamSummary } from '../../types/football'
+import { getTeamDisplayName } from '../../utils/displayNames'
 import { ProbabilityBar } from './ProbabilityBar'
 
 type PredictionPanelProps = {
@@ -16,22 +17,22 @@ export function PredictionPanel({ prediction, homeTeam, awayTeam }: PredictionPa
       <div className="prediction-panel__header">
         <BrainCircuit size={22} aria-hidden="true" />
         <div>
-          <h2>Prediction IA</h2>
+          <h2>Prédiction IA</h2>
           <p>{prediction.modelName}</p>
         </div>
       </div>
 
       <div className="prediction-score">
-        <span>Score predit</span>
+        <span>Score prédit</span>
         <strong>
           {prediction.predictedHomeScore ?? '-'} - {prediction.predictedAwayScore ?? '-'}
         </strong>
       </div>
 
       <div className="prediction-panel__bars">
-        <ProbabilityBar label={homeTeam.name} value={prediction.homeWinProbability} />
+        <ProbabilityBar label={getTeamDisplayName(homeTeam)} value={prediction.homeWinProbability} />
         <ProbabilityBar label="Nul" value={prediction.drawProbability} />
-        <ProbabilityBar label={awayTeam.name} value={prediction.awayWinProbability} />
+        <ProbabilityBar label={getTeamDisplayName(awayTeam)} value={prediction.awayWinProbability} />
       </div>
 
       <p>{prediction.explanation}</p>

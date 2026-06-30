@@ -14,6 +14,7 @@ import { getCompetitionGroups } from '../../services/groupService'
 import { getFootballMatches } from '../../services/matchService'
 import { getStadiums } from '../../services/stadiumService'
 import type { CompetitionGroup, FootballMatch } from '../../types/football'
+import { formatMatchday } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
@@ -64,7 +65,7 @@ export function HomePage() {
         setFootballMatches(demoFootballMatches)
         setCompetitionGroups(demoCompetitionGroups)
         setStadiumLabels({})
-        setError("L'API backend est indisponible, affichage des donnees de demonstration.")
+        setError("L'API du serveur est indisponible, affichage des données de démonstration.")
       } finally {
         if (isMounted) {
           setIsLoading(false)
@@ -93,7 +94,7 @@ export function HomePage() {
   if (isLoading) {
     return (
       <section className="page-section">
-        <Spinner label="Chargement des donnees LiveKick..." />
+        <Spinner label="Chargement des données LiveKick..." />
       </section>
     )
   }
@@ -102,7 +103,7 @@ export function HomePage() {
     return (
       <ErrorState
         title="Aucun match disponible"
-        message="Le backend ne retourne pas encore de calendrier exploitable."
+        message="Le serveur ne retourne pas encore de calendrier exploitable."
       />
     )
   }
@@ -118,13 +119,13 @@ export function HomePage() {
             Coupe du Monde 2026
           </span>
           <h1>LiveKick</h1>
-          <p>Scores instantanes, classements et prediction IA dans une interface mobile-first.</p>
+          <p>Scores instantanés, classements et prédiction IA dans une interface pensée pour le mobile.</p>
           <div className="home-hero__actions">
             <Button as={Link} to="/calendar">
               Voir le calendrier
             </Button>
             <Button as={Link} to={`/matches/${featuredMatch.id}`} variant="secondary">
-              Match center
+              Détail du match
             </Button>
           </div>
         </div>
@@ -136,19 +137,19 @@ export function HomePage() {
           </div>
           <Scoreboard footballMatch={featuredMatch} />
           <div className="featured-match__meta">
-            <span>Matchday {featuredMatch.matchday}</span>
+            <span>{formatMatchday(featuredMatch.matchday)}</span>
             <span>{getStadiumLabel(stadiumLabels, featuredMatch.stadiumId)}</span>
           </div>
         </article>
       </div>
 
-      <section className="dashboard-grid" aria-label="Apercu LiveKick">
+      <section className="dashboard-grid" aria-label="Aperçu LiveKick">
         <div className="dashboard-column dashboard-column--wide">
           <div className="section-title">
             <div>
               <span className="eyebrow">
                 <CalendarDays size={16} aria-hidden="true" />
-                Scores first
+                Scores d'abord
               </span>
               <h2>Matchs a suivre</h2>
             </div>

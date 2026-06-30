@@ -10,13 +10,26 @@ import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../
 
 const statusFilters: Array<{ label: string; value: MatchStatus | 'ALL' }> = [
   { label: 'Tous', value: 'ALL' },
-  { label: 'A venir', value: 'SCHEDULED' },
-  { label: 'Live', value: 'LIVE' },
-  { label: 'Termines', value: 'FINISHED' },
+  { label: 'À venir', value: 'SCHEDULED' },
+  { label: 'Direct', value: 'LIVE' },
+  { label: 'Terminés', value: 'FINISHED' },
 ]
 
 function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
-  return new Date(first.matchDate).getTime() - new Date(second.matchDate).getTime()
+  return new Date(second.matchDate).getTime() - new Date(first.matchDate).getTime()
+}
+
+const statusPriority: Record<MatchStatus, number> = {
+  LIVE: 0,
+  HALF_TIME: 0,
+  SCHEDULED: 1,
+  POSTPONED: 1,
+  FINISHED: 2,
+}
+
+function sortByCalendarPriority(first: FootballMatch, second: FootballMatch) {
+  const statusOrder = statusPriority[first.status] - statusPriority[second.status]
+  return statusOrder === 0 ? sortByMatchDate(first, second) : statusOrder
 }
 
 export function CalendarPage() {
@@ -50,7 +63,7 @@ export function CalendarPage() {
 
         setFootballMatches(demoFootballMatches)
         setStadiumLabels({})
-        setError("L'API backend est indisponible, affichage des donnees de demonstration.")
+        setError("L'API du serveur est indisponible, affichage des données de démonstration.")
       } finally {
         if (isMounted) {
           setIsLoading(false)
@@ -69,7 +82,7 @@ export function CalendarPage() {
     () =>
       [...footballMatches]
         .filter((footballMatch) => statusFilter === 'ALL' || footballMatch.status === statusFilter)
-        .sort(sortByMatchDate),
+        .sort(sortByCalendarPriority),
     [footballMatches, statusFilter],
   )
 
@@ -88,7 +101,7 @@ export function CalendarPage() {
       <div className="page-heading">
         <span>Calendrier</span>
         <h1>Matchs Coupe du Monde 2026</h1>
-        <p>Liste des rencontres avec statut, score et acces rapide au match center.</p>
+        <p>Liste des rencontres avec statut, score et accès rapide au détail du match.</p>
       </div>
 
       <div className="segmented-control" aria-label="Filtrer les matchs par statut">

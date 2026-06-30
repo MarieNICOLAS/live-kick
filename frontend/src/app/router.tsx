@@ -4,6 +4,7 @@ import { CalendarPage } from '../pages/public/CalendarPage'
 import { FavoritesPage } from '../pages/public/FavoritesPage'
 import { GroupsPage } from '../pages/public/GroupsPage'
 import { HomePage } from '../pages/public/HomePage'
+import { LivePage } from '../pages/public/LivePage'
 import { MatchDetailPage } from '../pages/public/MatchDetailPage'
 import { SimplePage } from '../pages/public/SimplePage'
 import { StatsPage } from '../pages/public/StatsPage'
@@ -33,7 +34,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'live',
-        element: <CalendarPage />,
+        element: <LivePage />,
       },
       {
         path: 'groups',
@@ -45,7 +46,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'teams/:id',
-        element: <SimplePage eyebrow="Equipe" title="Fiche equipe" message="La fiche detaillee equipe sera connectee au service teams dans l'etape equipes + joueurs." />,
+        element: <SimplePage eyebrow="Équipe" title="Fiche équipe" message="La fiche détaillée de l'équipe sera connectée au service des équipes et des joueurs." />,
       },
       {
         path: 'stats',

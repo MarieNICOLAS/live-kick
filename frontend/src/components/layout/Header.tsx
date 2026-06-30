@@ -8,13 +8,13 @@ const mainLinks = [
   { to: '/calendar', label: 'Calendrier' },
   { to: '/groups', label: 'Groupes' },
   { to: '/teams', label: 'Equipes' },
-  { to: '/stats', label: 'Stats' },
+  { to: '/stats', label: 'Statistiques' },
   { to: '/favorites', label: 'Favoris' },
 ]
 
 const mobileLinks = [
   { to: '/', label: 'Accueil', Icon: Home },
-  { to: '/live', label: 'Live', Icon: Activity },
+  { to: '/live', label: 'Direct', Icon: Activity },
   { to: '/calendar', label: 'Matchs', Icon: CalendarDays },
   { to: '/groups', label: 'Groupes', Icon: Trophy },
   { to: '/favorites', label: 'Favoris', Icon: Star },

@@ -2,7 +2,7 @@ import type { CompetitionGroup, FootballMatch, Prediction, Team } from '../types
 
 export const demoTeams: Team[] = [
   { id: 1, name: 'France', fifaCode: 'FRA', country: 'France', flagUrl: null, groupCode: 'A' },
-  { id: 2, name: 'Bresil', fifaCode: 'BRA', country: 'Bresil', flagUrl: null, groupCode: 'B' },
+  { id: 2, name: 'Brésil', fifaCode: 'BRA', country: 'Brésil', flagUrl: null, groupCode: 'B' },
   { id: 3, name: 'Argentine', fifaCode: 'ARG', country: 'Argentine', flagUrl: null, groupCode: 'A' },
   { id: 4, name: 'Japon', fifaCode: 'JPN', country: 'Japon', flagUrl: null, groupCode: 'B' },
 ]
@@ -12,7 +12,7 @@ export const demoFootballMatches: FootballMatch[] = [
     id: 101,
     matchDate: '2026-06-11T21:00:00',
     status: 'LIVE',
-    phase: 'Group stage',
+    phase: 'Phase de groupes',
     phaseType: 'GROUP',
     groupCode: 'A',
     matchday: 1,
@@ -27,7 +27,7 @@ export const demoFootballMatches: FootballMatch[] = [
     id: 102,
     matchDate: '2026-06-12T18:00:00',
     status: 'SCHEDULED',
-    phase: 'Group stage',
+    phase: 'Phase de groupes',
     phaseType: 'GROUP',
     groupCode: 'B',
     matchday: 1,
@@ -42,7 +42,7 @@ export const demoFootballMatches: FootballMatch[] = [
     id: 103,
     matchDate: '2026-06-13T20:00:00',
     status: 'FINISHED',
-    phase: 'Group stage',
+    phase: 'Phase de groupes',
     phaseType: 'GROUP',
     groupCode: 'A',
     matchday: 1,
@@ -95,7 +95,7 @@ export const demoPrediction: Prediction = {
   predictedHomeScore: 2,
   predictedAwayScore: 1,
   confidenceScore: 0.72,
-  modelName: 'LiveKick Prediction Model',
-  explanation: 'La France garde une probabilite superieure grace au volume offensif et a la possession recente.',
+  modelName: 'Modèle de prédiction LiveKick',
+  explanation: 'La France garde une probabilité supérieure grâce au volume offensif et à la possession récente.',
   generatedAt: '2026-06-11T20:45:00Z',
 }

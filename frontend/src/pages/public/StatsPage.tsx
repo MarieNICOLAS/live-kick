@@ -1,13 +1,14 @@
 import { BarChart3 } from 'lucide-react'
 import { demoTeams } from '../../fixtures/liveKickDemoData'
+import { getTeamDisplayName } from '../../utils/displayNames'
 
 export function StatsPage() {
   return (
     <section className="page-section">
       <div className="page-heading">
-        <span>Stats</span>
+        <span>Statistiques</span>
         <h1>Comparaison</h1>
-        <p>Comparez les equipes avec leurs tendances, leur forme et leurs indicateurs de performance.</p>
+        <p>Comparez les équipes avec leurs tendances, leur forme et leurs indicateurs de performance.</p>
       </div>
 
       <section className="info-panel">
@@ -17,16 +18,16 @@ export function StatsPage() {
         </h2>
         <dl className="metric-grid">
           <div>
-            <dt>{demoTeams[0].name}</dt>
+            <dt>{getTeamDisplayName(demoTeams[0])}</dt>
             <dd>56%</dd>
           </div>
           <div>
-            <dt>{demoTeams[2].name}</dt>
+            <dt>{getTeamDisplayName(demoTeams[2])}</dt>
             <dd>44%</dd>
           </div>
           <div>
             <dt>Indicateur</dt>
-            <dd>Forme recente</dd>
+            <dd>Forme récente</dd>
           </div>
         </dl>
       </section>

@@ -11,6 +11,8 @@ import { getFootballMatchById } from '../../services/matchService'
 import { getMatchPrediction } from '../../services/predictionService'
 import { getStadiumById } from '../../services/stadiumService'
 import type { FootballMatch, Prediction, Stadium } from '../../types/football'
+import { getCityDisplayName, getStadiumDisplayName } from '../../utils/displayNames'
+import { formatMatchStatus, formatMatchday, formatPhase } from '../../utils/formatters'
 
 export function MatchDetailPage() {
   const { id } = useParams()
@@ -82,7 +84,7 @@ export function MatchDetailPage() {
   if (isLoading) {
     return (
       <section className="page-section">
-        <Spinner label="Chargement du match center..." />
+        <Spinner label="Chargement du détail du match..." />
       </section>
     )
   }
@@ -107,10 +109,15 @@ export function MatchDetailPage() {
         <div className="match-detail-hero__meta">
           <StatusBadge status={footballMatch.status} minute={footballMatch.currentMinute} />
           <span>Groupe {footballMatch.groupCode}</span>
-          <span>Matchday {footballMatch.matchday}</span>
+          <span>{formatMatchday(footballMatch.matchday)}</span>
         </div>
         <Scoreboard footballMatch={footballMatch} />
-        <p>{stadium ? `${stadium.name}, ${stadium.city}` : 'Stade a confirmer'} - phase {footballMatch.phase}</p>
+        <p>
+          {stadium
+            ? `${getStadiumDisplayName(stadium)}, ${getCityDisplayName(stadium.city)}`
+            : 'Stade à confirmer'}{' '}
+          - {formatPhase(footballMatch.phase)}
+        </p>
       </div>
 
       <div className="dashboard-grid">
@@ -119,15 +126,15 @@ export function MatchDetailPage() {
           <dl className="metric-grid">
             <div>
               <dt>Minute</dt>
-              <dd>{footballMatch.currentMinute ? `${footballMatch.currentMinute}'` : 'A venir'}</dd>
+              <dd>{footballMatch.currentMinute ? `${footballMatch.currentMinute}'` : 'À venir'}</dd>
             </div>
             <div>
               <dt>Statut</dt>
-              <dd>{footballMatch.status}</dd>
+              <dd>{formatMatchStatus(footballMatch.status, footballMatch.currentMinute)}</dd>
             </div>
             <div>
               <dt>Phase</dt>
-              <dd>{footballMatch.phaseType}</dd>
+              <dd>{formatPhase(footballMatch.phaseType)}</dd>
             </div>
           </dl>
         </section>

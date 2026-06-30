@@ -7,7 +7,7 @@ export function GroupsPage() {
       <div className="page-heading">
         <span>Groupes</span>
         <h1>Classements</h1>
-        <p>Points, difference de buts et position des equipes par groupe.</p>
+        <p>Points, différence de buts et position des équipes par groupe.</p>
       </div>
 
       <div className="group-grid">

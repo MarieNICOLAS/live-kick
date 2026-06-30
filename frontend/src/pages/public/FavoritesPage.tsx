@@ -8,7 +8,7 @@ export function FavoritesPage() {
     return (
       <EmptyState
         title="Aucun favori"
-        message="Ajoutez une equipe ou un match pour personnaliser votre suivi LiveKick."
+        message="Ajoutez une équipe ou un match pour personnaliser votre suivi LiveKick."
       />
     )
   }

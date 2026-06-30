@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import footerLogo from '../../assets/logos/logo-monochrome-light.png'
 
 const footerLinks = [
-  { to: '/privacy', label: 'Confidentialite' },
+  { to: '/privacy', label: 'Confidentialité' },
   { to: '/terms', label: 'Conditions' },
   { to: '/contact', label: 'Contact' },
 ]
@@ -13,7 +13,7 @@ export function Footer() {
       <div className="footer-brand">
         <img src={footerLogo} alt="" />
         <strong>LiveKick</strong>
-        <p>Live football intelligence. Real-time. Everywhere. Suivez la Coupe du Monde 2026 comme jamais.</p>
+        <p>L'intelligence du football en direct. Suivez la Coupe du Monde 2026 comme jamais.</p>
       </div>
 
       <nav className="footer-nav" aria-label="Navigation pied de page">
