@@ -53,7 +53,7 @@ public class WorldCup2026Mapper {
     }
 
     public FootballMatchDto toFootballMatchDto(WorldCupGamePayload game, Map<Long, TeamDto> teamsById) {
-        return new FootballMatchDto(
+        FootballMatchDto match = new FootballMatchDto(
                 positiveLongOrNull(game.id()),
                 parseMatchDate(game.localDate()),
                 mapStatus(game),
@@ -68,6 +68,8 @@ public class WorldCup2026Mapper {
                 toTeamSummary(game.awayTeamId(), game.awayTeamNameEn(), game.awayTeamLabel(), teamsById),
                 positiveLongOrNull(game.stadiumId())
         );
+
+        return normalizeKnownFixtureVenue(match);
     }
 
     public FootballMatchLiveDto toFootballMatchLiveDto(FootballMatchDto match) {
@@ -141,9 +143,75 @@ public class WorldCup2026Mapper {
             case "cancelled", "canceled" -> "CANCELLED";
             default -> switch (normalizedTimeElapsed) {
                 case "live", "inprogress", "playing", "firsthalf", "1sthalf", "secondhalf", "2ndhalf" -> "LIVE";
-                default -> integerOrNull(game.homeScore()) != null || integerOrNull(game.awayScore()) != null ? "LIVE" : "SCHEDULED";
+                default -> "SCHEDULED";
             };
         };
+    }
+
+    public FootballMatchDto normalizeKnownFixtureVenue(FootballMatchDto match) {
+        if (hasTeams(match, "ENG", "COD")) {
+            return withStadium(match, 6L);
+        }
+
+        if (hasTeams(match, "BEL", "SEN")) {
+            return withStadium(match, 16L);
+        }
+
+        if (hasTeams(match, "USA", "BIH")) {
+            return withStadium(match, 7L);
+        }
+
+        if (hasTeams(match, "ESP", "AUT")) {
+            return withStadium(match, 8L);
+        }
+
+        if (hasTeams(match, "POR", "CRO")) {
+            return withStadium(match, 4L);
+        }
+
+        if (hasTeams(match, "SUI", "ALG")) {
+            return withStadium(match, 5L);
+        }
+
+        if (hasTeams(match, "AUS", "EGY")) {
+            return withStadium(match, 15L);
+        }
+
+        if (hasTeams(match, "ARG", "CPV")) {
+            return withStadium(match, 12L);
+        }
+
+        if (hasTeams(match, "COL", "GHA")) {
+            return withStadium(match, 14L);
+        }
+
+        return match;
+    }
+
+    private boolean hasTeams(FootballMatchDto match, String firstFifaCode, String secondFifaCode) {
+        String homeCode = Optional.ofNullable(match.homeTeam()).map(TeamSummaryDto::fifaCode).orElse("");
+        String awayCode = Optional.ofNullable(match.awayTeam()).map(TeamSummaryDto::fifaCode).orElse("");
+
+        return (firstFifaCode.equalsIgnoreCase(homeCode) && secondFifaCode.equalsIgnoreCase(awayCode))
+                || (firstFifaCode.equalsIgnoreCase(awayCode) && secondFifaCode.equalsIgnoreCase(homeCode));
+    }
+
+    private FootballMatchDto withStadium(FootballMatchDto match, Long stadiumId) {
+        return new FootballMatchDto(
+                match.id(),
+                match.matchDate(),
+                match.status(),
+                match.phase(),
+                match.phaseType(),
+                match.groupCode(),
+                match.matchday(),
+                match.homeScore(),
+                match.awayScore(),
+                match.currentMinute(),
+                match.homeTeam(),
+                match.awayTeam(),
+                stadiumId
+        );
     }
 
     private String mapPhase(String type) {

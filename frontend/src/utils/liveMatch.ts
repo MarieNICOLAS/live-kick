@@ -2,6 +2,7 @@ import type { FootballMatch, MatchStatus } from '../types/football'
 import { getMatchTimestamp } from './formatters'
 
 const liveWindowMinutes = 130
+const preKickoffLiveToleranceMinutes = 5
 
 type EffectiveMatchState = {
   status: MatchStatus
@@ -14,26 +15,29 @@ function clampLiveMinute(minute: number) {
   return Math.min(liveWindowMinutes, Math.max(1, minute))
 }
 
-function getBrowserLocalTimestamp(value: string) {
-  const timestamp = new Date(value).getTime()
-  return Number.isNaN(timestamp) ? null : timestamp
+function getElapsedLiveMinute(footballMatch: FootballMatch, now: number) {
+  const kickoffTimestamp = getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId)
+  const elapsedMinute = Math.floor((now - kickoffTimestamp) / 60_000)
+
+  return elapsedMinute >= 0 && elapsedMinute <= liveWindowMinutes ? clampLiveMinute(elapsedMinute) : null
 }
 
-function getElapsedLiveMinute(footballMatch: FootballMatch, now: number) {
-  const timestamps = [
-    getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId),
-    getBrowserLocalTimestamp(footballMatch.matchDate),
-  ].filter((timestamp): timestamp is number => timestamp !== null && Number.isFinite(timestamp))
-
-  const liveCandidates = timestamps
-    .map((timestamp) => Math.floor((now - timestamp) / 60_000))
-    .filter((minute) => minute >= 0 && minute <= liveWindowMinutes)
-
-  return liveCandidates.length > 0 ? clampLiveMinute(Math.min(...liveCandidates)) : null
+function isClearlyBeforeKickoff(footballMatch: FootballMatch, now: number) {
+  const kickoffTimestamp = getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId)
+  return kickoffTimestamp - now > preKickoffLiveToleranceMinutes * 60_000
 }
 
 export function getEffectiveMatchState(footballMatch: FootballMatch, now = Date.now()): EffectiveMatchState {
   if (footballMatch.status === 'LIVE' || footballMatch.status === 'HALF_TIME') {
+    if (footballMatch.currentMinute === null && isClearlyBeforeKickoff(footballMatch, now)) {
+      return {
+        status: 'SCHEDULED',
+        homeScore: footballMatch.homeScore,
+        awayScore: footballMatch.awayScore,
+        currentMinute: null,
+      }
+    }
+
     return {
       status: footballMatch.status,
       homeScore: footballMatch.homeScore ?? 0,
