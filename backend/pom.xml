@@ -11,9 +11,9 @@
 	<groupId>com.livekick</groupId>
 	<artifactId>backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
+	<name>LiveKick Backend</name>
+	<description>Spring Boot API for the LiveKick 2026 MVP.</description>
+	<url>https://github.com/livekick/live-kick</url>
 	<licenses>
 		<license/>
 	</licenses>

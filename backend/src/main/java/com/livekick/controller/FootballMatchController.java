@@ -37,9 +37,14 @@ public class FootballMatchController {
         return footballDataService.getMatches(group, phase, status);
     }
 
-    @GetMapping("/{id}")
-    public FootballMatchDto getMatch(@PathVariable Long id) {
-        return footballDataService.getMatch(id);
+    @GetMapping("/predictions")
+    public List<PredictionDto> getKnownMatchPredictions() {
+        return predictionService.getKnownMatchPredictions();
+    }
+
+    @GetMapping("/predictions/upcoming")
+    public List<PredictionDto> getUpcomingKnownMatchPredictions() {
+        return predictionService.getUpcomingKnownMatchPredictions();
     }
 
     @GetMapping("/{id}/live")
@@ -50,5 +55,10 @@ public class FootballMatchController {
     @GetMapping("/{id}/prediction")
     public PredictionDto getMatchPrediction(@PathVariable Long id) {
         return predictionService.getPrediction(id);
+    }
+
+    @GetMapping("/{id}")
+    public FootballMatchDto getMatch(@PathVariable Long id) {
+        return footballDataService.getMatch(id);
     }
 }

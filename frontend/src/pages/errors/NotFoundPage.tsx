@@ -7,10 +7,10 @@ export function NotFoundPage() {
     <section className="page-section">
       <ErrorState
         title="Page introuvable"
-        message="La page demandee n'existe pas ou a ete deplacee."
+        message="La page demandée n'existe pas ou a été déplacée."
         action={
           <Button as={Link} to="/">
-            Retour a l'accueil
+            Retour à l'accueil
           </Button>
         }
       />

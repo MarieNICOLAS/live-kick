@@ -43,11 +43,15 @@
 
 #root {
   min-height: 100svh;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
   background: var(--lk-bg);
   margin: 0;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 * {
@@ -56,11 +60,23 @@ body {
 
 h1 {
   color: var(--lk-text-primary);
-  font-size: clamp(36px, 6vw, 72px);
-  line-height: 1;
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.08;
+  margin: 0;
+}
+
+h2 {
+  color: var(--lk-text-primary);
   margin: 0;
 }
 
 p {
   margin: 0;
+}
+
+@media (max-width: 720px) {
+  h1 {
+    font-size: 40px;
+  }
 }

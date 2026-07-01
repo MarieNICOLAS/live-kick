@@ -1,33 +1,55 @@
-import { Activity, Bell, CalendarDays, Home, LogIn, Moon, Search, Sun, BarChart3, User } from 'lucide-react'
+import { Activity, BarChart3, Bell, CalendarDays, Home, Moon, Search, Star, Sun, Trophy } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useTheme } from '../../app/themeContext'
 import iconLogo from '../../assets/logos/simply-color-logo.png'
+import { useNotificationsStore } from '../../stores/notificationsStore'
 
 const mainLinks = [
   { to: '/', label: 'Accueil' },
-  { to: '/matches', label: 'Calendrier' },
+  { to: '/calendar', label: 'Calendrier' },
   { to: '/groups', label: 'Groupes' },
-  { to: '/bracket', label: 'Tableau final' },
   { to: '/teams', label: 'Equipes' },
+  { to: '/stats', label: 'Statistiques' },
   { to: '/favorites', label: 'Favoris' },
 ]
 
 const mobileLinks = [
   { to: '/', label: 'Accueil', Icon: Home },
-  { to: '/live', label: 'Live', Icon: Activity },
-  { to: '/matches', label: 'Matchs', Icon: CalendarDays },
-  { to: '/groups', label: 'Stats', Icon: BarChart3 },
-  { to: '/profile', label: 'Profil', Icon: User },
+  { to: '/live', label: 'Direct', Icon: Activity },
+  { to: '/calendar', label: 'Matchs', Icon: CalendarDays },
+  { to: '/groups', label: 'Groupes', Icon: Trophy },
+  { to: '/favorites', label: 'Favoris', Icon: Star },
 ]
 
 export function Header() {
   const { theme, toggleTheme } = useTheme()
+  const unreadCount = useNotificationsStore((state) => state.unreadCount())
   const ThemeIcon = theme === 'dark' ? Sun : Moon
-  const isAuthenticated = false
-  const ProfileIcon = isAuthenticated ? User : LogIn
 
   return (
     <>
+      <header className="mobile-top-header">
+        <NavLink className="brand-link" to="/" aria-label="Accueil LiveKick">
+          <img src={iconLogo} alt="" />
+          <span>LiveKick</span>
+        </NavLink>
+
+        <div className="header-tools">
+          <NavLink className="icon-button" to="/stats" aria-label="Statistiques">
+            <BarChart3 size={20} aria-hidden="true" />
+          </NavLink>
+
+          <NavLink className="icon-button notification-button" to="/notifications" aria-label="Notifications">
+            <Bell size={20} aria-hidden="true" />
+            {unreadCount > 0 ? <span>{unreadCount}</span> : null}
+          </NavLink>
+
+          <button className="icon-button" type="button" onClick={toggleTheme} aria-label="Changer de theme">
+            <ThemeIcon size={20} aria-hidden="true" />
+          </button>
+        </div>
+      </header>
+
       <header className="site-header">
         <NavLink className="brand-link" to="/" aria-label="Accueil LiveKick">
           <img src={iconLogo} alt="" />
@@ -49,18 +71,14 @@ export function Header() {
             <kbd>/</kbd>
           </label>
 
-          <button className="icon-button notification-button" type="button" aria-label="Notifications">
+          <NavLink className="icon-button notification-button" to="/notifications" aria-label="Notifications">
             <Bell size={21} aria-hidden="true" />
-            <span>3</span>
-          </button>
+            {unreadCount > 0 ? <span>{unreadCount}</span> : null}
+          </NavLink>
 
           <button className="icon-button" type="button" onClick={toggleTheme} aria-label="Changer de theme">
             <ThemeIcon size={21} aria-hidden="true" />
           </button>
-
-          <NavLink className="icon-button" to={isAuthenticated ? '/profile' : '/login'} aria-label={isAuthenticated ? 'Profil' : 'Connexion'}>
-            <ProfileIcon size={21} aria-hidden="true" />
-          </NavLink>
         </div>
       </header>
 

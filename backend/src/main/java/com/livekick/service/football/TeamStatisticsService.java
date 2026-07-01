@@ -6,6 +6,7 @@ import com.livekick.dto.football.TeamDto;
 import com.livekick.dto.football.TeamFormMatchDto;
 import com.livekick.dto.football.TeamStatisticsDto;
 import com.livekick.dto.football.TeamSummaryDto;
+import com.livekick.mapper.FrenchFootballLabelMapper;
 import com.livekick.repository.TeamStatisticsRepository;
 import org.springframework.stereotype.Service;
 
@@ -18,20 +19,25 @@ public class TeamStatisticsService {
 
     private final TeamStatisticsRepository teamStatisticsRepository;
     private final FootballDataService footballDataService;
+    private final FrenchFootballLabelMapper labelMapper;
 
     public TeamStatisticsService(
             TeamStatisticsRepository teamStatisticsRepository,
-            FootballDataService footballDataService
+            FootballDataService footballDataService,
+            FrenchFootballLabelMapper labelMapper
     ) {
         this.teamStatisticsRepository = teamStatisticsRepository;
         this.footballDataService = footballDataService;
+        this.labelMapper = labelMapper;
     }
 
     public TeamStatisticsDto getTeamStatistics(Long teamId) {
         TeamDto team = footballDataService.getTeam(teamId);
         TeamSummaryDto teamSummary = toTeamSummary(team);
 
-        List<FootballMatchDto> matches = teamStatisticsRepository.findFinishedMatchesByTeamId(teamId);
+        List<FootballMatchDto> matches = teamStatisticsRepository.findFinishedMatchesByTeamId(teamId).stream()
+                .map(labelMapper::localize)
+                .toList();
 
         int matchesPlayed = matches.size();
         int wins = 0;
@@ -66,7 +72,7 @@ public class TeamStatisticsService {
                 .map(match -> toTeamFormMatch(match, teamId))
                 .toList();
 
-        return new TeamStatisticsDto(
+        return labelMapper.localize(new TeamStatisticsDto(
                 team.id(),
                 teamSummary,
                 matchesPlayed,
@@ -80,7 +86,7 @@ public class TeamStatisticsService {
                 averageGoalsFor,
                 averageGoalsAgainst,
                 recentForm
-        );
+        ));
     }
 
     public TeamComparisonDto compareTeams(Long firstTeamId, Long secondTeamId) {
