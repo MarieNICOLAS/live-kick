@@ -10,7 +10,6 @@ import { StatusBadge } from '../../components/football/StatusBadge'
 import { Button } from '../../components/ui/Button'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
-import { demoCompetitionGroups, demoFootballMatches, demoPrediction } from '../../fixtures/liveKickDemoData'
 import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import { getCompetitionGroups } from '../../services/groupService'
 import { getFootballMatches } from '../../services/matchService'
@@ -18,6 +17,7 @@ import { getKnownMatchPredictions, getMatchPrediction } from '../../services/pre
 import { getStadiums } from '../../services/stadiumService'
 import type { CompetitionGroup, FootballMatch, Prediction } from '../../types/football'
 import { formatMatchContext, formatMatchday, getMatchTimestamp } from '../../utils/formatters'
+import { withEffectiveMatchState } from '../../utils/liveMatch'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
@@ -26,7 +26,8 @@ function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
 
 function pickFeaturedMatch(footballMatches: FootballMatch[]) {
   const now = Date.now()
-  const liveMatch = footballMatches.find((footballMatch) => footballMatch.status === 'LIVE')
+  const effectiveMatches = footballMatches.map((footballMatch) => withEffectiveMatchState(footballMatch, now))
+  const liveMatch = effectiveMatches.find((footballMatch) => footballMatch.status === 'LIVE')
   const nextMatch = footballMatches
     .filter((footballMatch) => getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId) >= now)
     .sort(sortByMatchDate)[0]
@@ -34,12 +35,22 @@ function pickFeaturedMatch(footballMatches: FootballMatch[]) {
   return liveMatch ?? nextMatch ?? footballMatches[0]
 }
 
+function getSettledValue<T>(result: PromiseSettledResult<T>, fallback: T) {
+  return result.status === 'fulfilled' ? result.value : fallback
+}
+
+function buildHomeDataWarning(results: PromiseSettledResult<unknown>[]) {
+  return results.some((result) => result.status === 'rejected')
+    ? "Certaines donnees n'ont pas pu etre actualisees. LiveKick affiche les dernieres donnees disponibles depuis le backend."
+    : null
+}
+
 export function HomePage() {
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
   const [competitionGroups, setCompetitionGroups] = useState<CompetitionGroup[]>([])
   const [predictionsByMatchId, setPredictionsByMatchId] = useState<Record<number, Prediction>>({})
   const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
-  const [featuredPrediction, setFeaturedPrediction] = useState<Prediction>(demoPrediction)
+  const [featuredPrediction, setFeaturedPrediction] = useState<Prediction | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -47,21 +58,24 @@ export function HomePage() {
     let isMounted = true
 
     async function loadHomeData() {
-      try {
-        const [matchesResponse, groupsResponse, stadiumsResponse] = await Promise.all([
-          getFootballMatches(),
-          getCompetitionGroups(),
-          getStadiums(),
-        ])
+      const [matchesResult, groupsResult, stadiumsResult] = await Promise.allSettled([
+        getFootballMatches(),
+        getCompetitionGroups(),
+        getStadiums(),
+      ])
 
         if (!isMounted) {
           return
         }
 
+        const matchesResponse = getSettledValue<FootballMatch[]>(matchesResult, [])
+        const groupsResponse = getSettledValue<CompetitionGroup[]>(groupsResult, [])
+        const stadiumsResponse = getSettledValue(stadiumsResult, [])
+
         setFootballMatches(matchesResponse)
         setCompetitionGroups(groupsResponse)
         setStadiumLabels(buildStadiumLabelMap(stadiumsResponse))
-        setError(null)
+        setError(buildHomeDataWarning([matchesResult, groupsResult, stadiumsResult]))
 
         try {
           const predictionsResponse = await getKnownMatchPredictions()
@@ -73,20 +87,8 @@ export function HomePage() {
             setPredictionsByMatchId({})
           }
         }
-      } catch {
-        if (!isMounted) {
-          return
-        }
-
-        setFootballMatches(demoFootballMatches)
-        setCompetitionGroups(demoCompetitionGroups)
-        setPredictionsByMatchId({})
-        setStadiumLabels({})
-        setError("L'API du serveur est indisponible, affichage des données de démonstration.")
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
+      if (isMounted) {
+        setIsLoading(false)
       }
     }
 
@@ -98,26 +100,31 @@ export function HomePage() {
   }, [])
 
   const refreshHomeData = useCallback(async () => {
+    const [matchesResult, groupsResult, stadiumsResult] = await Promise.allSettled([
+      getFootballMatches(),
+      getCompetitionGroups(),
+      getStadiums(),
+    ])
+
+    if (matchesResult.status === 'fulfilled') {
+      setFootballMatches(matchesResult.value)
+    }
+
+    if (groupsResult.status === 'fulfilled') {
+      setCompetitionGroups(groupsResult.value)
+    }
+
+    if (stadiumsResult.status === 'fulfilled') {
+      setStadiumLabels(buildStadiumLabelMap(stadiumsResult.value))
+    }
+
+    setError(buildHomeDataWarning([matchesResult, groupsResult, stadiumsResult]))
+
     try {
-      const [matchesResponse, groupsResponse, stadiumsResponse] = await Promise.all([
-        getFootballMatches(),
-        getCompetitionGroups(),
-        getStadiums(),
-      ])
-
-      setFootballMatches(matchesResponse)
-      setCompetitionGroups(groupsResponse)
-      setStadiumLabels(buildStadiumLabelMap(stadiumsResponse))
-      setError(null)
-
-      try {
-        const predictionsResponse = await getKnownMatchPredictions()
-        setPredictionsByMatchId(Object.fromEntries(predictionsResponse.map((prediction) => [prediction.matchId, prediction])))
-      } catch {
-        setPredictionsByMatchId({})
-      }
+      const predictionsResponse = await getKnownMatchPredictions()
+      setPredictionsByMatchId(Object.fromEntries(predictionsResponse.map((prediction) => [prediction.matchId, prediction])))
     } catch {
-      setError("Actualisation automatique indisponible. Les dernières données chargées restent affichées.")
+      setPredictionsByMatchId({})
     }
   }, [])
 
@@ -133,6 +140,8 @@ export function HomePage() {
         return
       }
 
+      setFeaturedPrediction(null)
+
       try {
         const predictionResponse = await getMatchPrediction(featuredMatch.id)
         if (isMounted) {
@@ -140,7 +149,7 @@ export function HomePage() {
         }
       } catch {
         if (isMounted) {
-          setFeaturedPrediction({ ...demoPrediction, matchId: featuredMatch.id })
+          setFeaturedPrediction(null)
         }
       }
     }
@@ -155,6 +164,7 @@ export function HomePage() {
   const visibleMatches = useMemo(
     () =>
       [...footballMatches]
+        .map((footballMatch) => withEffectiveMatchState(footballMatch))
         .sort(sortByMatchDate)
         .filter((footballMatch) => footballMatch.status === 'LIVE' || footballMatch.status === 'SCHEDULED')
         .slice(0, 6),
@@ -195,8 +205,8 @@ export function HomePage() {
             <Button as={Link} to="/calendar">
               Voir le calendrier
             </Button>
-            <Button as={Link} to={`/matches/${featuredMatch.id}`} variant="secondary">
-              Détail du match
+            <Button as={Link} to="/bracket" variant="secondary">
+              Voir le tableau
             </Button>
           </div>
         </div>
@@ -211,11 +221,13 @@ export function HomePage() {
             <span>{formatMatchday(featuredMatch.matchday, featuredMatch.phaseType, featuredMatch.phase)}</span>
             <span>{getStadiumLabel(stadiumLabels, featuredMatch.stadiumId)}</span>
           </div>
-          <PredictionSummary
-            prediction={featuredPrediction}
-            homeTeam={featuredMatch.homeTeam}
-            awayTeam={featuredMatch.awayTeam}
-          />
+          {featuredPrediction ? (
+            <PredictionSummary
+              prediction={featuredPrediction}
+              homeTeam={featuredMatch.homeTeam}
+              awayTeam={featuredMatch.awayTeam}
+            />
+          ) : null}
         </Link>
       </div>
 
@@ -244,13 +256,15 @@ export function HomePage() {
           </div>
         </div>
 
-        <Link className="prediction-panel-link" to={`/matches/${featuredMatch.id}`} aria-label="Voir la prédiction détaillée du match">
-          <PredictionPanel
-            prediction={featuredPrediction}
-            homeTeam={featuredMatch.homeTeam}
-            awayTeam={featuredMatch.awayTeam}
-          />
-        </Link>
+        {featuredPrediction ? (
+          <Link className="prediction-panel-link" to={`/matches/${featuredMatch.id}`} aria-label="Voir la prédiction détaillée du match">
+            <PredictionPanel
+              prediction={featuredPrediction}
+              homeTeam={featuredMatch.homeTeam}
+              awayTeam={featuredMatch.awayTeam}
+            />
+          </Link>
+        ) : null}
 
         <div className="dashboard-column dashboard-column--wide">
           <div className="section-title">

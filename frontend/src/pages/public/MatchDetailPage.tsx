@@ -22,6 +22,7 @@ import {
   formatPlayerPosition,
   isGroupPhase,
 } from '../../utils/formatters'
+import { getEffectiveMatchState } from '../../utils/liveMatch'
 
 type TeamSummaryWithId = TeamSummary & { id: number }
 
@@ -170,6 +171,7 @@ export function MatchDetailPage() {
   }
 
   const matchContext = formatMatchContext(footballMatch.groupCode, footballMatch.phaseType, footballMatch.phase)
+  const effectiveState = getEffectiveMatchState(footballMatch)
   const groupLinkTarget =
     footballMatch.groupCode && isGroupPhase(footballMatch.phaseType ?? footballMatch.phase)
       ? `/groups/${footballMatch.groupCode}`
@@ -179,7 +181,7 @@ export function MatchDetailPage() {
     <section className="match-detail-page">
       <div className="match-detail-hero">
         <div className="match-detail-hero__meta">
-          <StatusBadge status={footballMatch.status} minute={footballMatch.currentMinute} />
+          <StatusBadge status={effectiveState.status} minute={effectiveState.currentMinute} />
           {groupLinkTarget ? (
             <Link to={groupLinkTarget}>{matchContext}</Link>
           ) : (
@@ -206,13 +208,13 @@ export function MatchDetailPage() {
           <dl className="metric-grid">
             <div>
               <dt>Minute</dt>
-              <dd>{footballMatch.currentMinute ? `${footballMatch.currentMinute}'` : '-'}</dd>
+              <dd>{effectiveState.currentMinute ? `${effectiveState.currentMinute}'` : '-'}</dd>
             </div>
             <div>
               <dt>Statut</dt>
               <dd>
-                <Link className="metric-link" to={`/calendar?status=${footballMatch.status}`}>
-                  {formatMatchStatus(footballMatch.status, footballMatch.currentMinute)}
+                <Link className="metric-link" to={`/calendar?status=${effectiveState.status}`}>
+                  {formatMatchStatus(effectiveState.status, effectiveState.currentMinute)}
                 </Link>
               </dd>
             </div>

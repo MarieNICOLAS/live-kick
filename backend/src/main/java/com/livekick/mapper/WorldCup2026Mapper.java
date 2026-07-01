@@ -21,11 +21,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Component
 public class WorldCup2026Mapper {
 
     private static final DateTimeFormatter PROVIDER_DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+    private static final Pattern MINUTE_PATTERN = Pattern.compile("^\\s*(\\d{1,3})(?:\\s*(?:'|\\+|min|minute|$))", Pattern.CASE_INSENSITIVE);
 
     public TeamDto toTeamDto(WorldCupTeamPayload team) {
         return new TeamDto(
@@ -128,7 +130,8 @@ public class WorldCup2026Mapper {
             return "FINISHED";
         }
         String timeElapsed = Optional.ofNullable(game.timeElapsed()).orElse("").trim();
-        if (timeElapsed.matches("\\d+")) {
+        String normalizedTimeElapsed = timeElapsed.toLowerCase().replaceAll("[_\\s-]+", "");
+        if (parseCurrentMinute(timeElapsed) != null) {
             return "LIVE";
         }
         return switch (timeElapsed.toLowerCase()) {
@@ -136,7 +139,10 @@ public class WorldCup2026Mapper {
             case "halftime", "half-time" -> "HALF_TIME";
             case "postponed" -> "POSTPONED";
             case "cancelled", "canceled" -> "CANCELLED";
-            default -> "SCHEDULED";
+            default -> switch (normalizedTimeElapsed) {
+                case "live", "inprogress", "playing", "firsthalf", "1sthalf", "secondhalf", "2ndhalf" -> "LIVE";
+                default -> integerOrNull(game.homeScore()) != null || integerOrNull(game.awayScore()) != null ? "LIVE" : "SCHEDULED";
+            };
         };
     }
 
@@ -165,8 +171,16 @@ public class WorldCup2026Mapper {
     }
 
     private Integer parseCurrentMinute(String value) {
-        Integer minute = integerOrNull(value);
-        return minute == null ? null : Math.min(minute, 130);
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        var matcher = MINUTE_PATTERN.matcher(value);
+        if (!matcher.find()) {
+            return null;
+        }
+
+        return Math.min(Math.max(Integer.parseInt(matcher.group(1)), 1), 130);
     }
 
     private Integer groupDisplayOrder(String code) {

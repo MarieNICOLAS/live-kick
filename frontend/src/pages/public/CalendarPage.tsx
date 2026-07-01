@@ -10,6 +10,7 @@ import { getKnownMatchPredictions } from '../../services/predictionService'
 import { getStadiums } from '../../services/stadiumService'
 import type { FootballMatch, MatchStatus, Prediction, Stadium } from '../../types/football'
 import { formatDateKey, getMatchDateKey, getMatchTimestamp } from '../../utils/formatters'
+import { withEffectiveMatchState } from '../../utils/liveMatch'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 type CalendarFilter = MatchStatus | 'ALL' | 'DATES_ONLY'
@@ -233,6 +234,7 @@ export function CalendarPage() {
   const filteredMatches = useMemo(
     () =>
       [...footballMatches]
+        .map((footballMatch) => withEffectiveMatchState(footballMatch))
         .filter((footballMatch) => shouldShowMatchForFilter(footballMatch, statusFilter))
         .filter((footballMatch) => !groupFilter || footballMatch.groupCode === groupFilter.toUpperCase())
         .filter((footballMatch) => !phaseFilter || footballMatch.phase === phaseFilter || footballMatch.phaseType === phaseFilter)

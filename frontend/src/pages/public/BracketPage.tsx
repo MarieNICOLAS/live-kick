@@ -51,6 +51,7 @@ const rowGap = 22
 
 export function BracketPage() {
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
+  const [expandedMobileNodeKey, setExpandedMobileNodeKey] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -150,7 +151,12 @@ export function BracketPage() {
             ))}
 
             {bracket.nodes.map((node) => (
-              <BracketMatchCard node={node} key={node.key} />
+              <BracketMatchCard
+                isMobileExpanded={expandedMobileNodeKey === node.key}
+                node={node}
+                key={node.key}
+                onMobileToggle={() => setExpandedMobileNodeKey((currentKey) => (currentKey === node.key ? null : node.key))}
+              />
             ))}
           </div>
         </div>
@@ -159,7 +165,15 @@ export function BracketPage() {
   )
 }
 
-function BracketMatchCard({ node }: { node: BracketNode }) {
+function BracketMatchCard({
+  isMobileExpanded,
+  node,
+  onMobileToggle,
+}: {
+  isMobileExpanded: boolean
+  node: BracketNode
+  onMobileToggle: () => void
+}) {
   const content = (
     <>
       <div className="bracket-match__meta">
@@ -170,20 +184,51 @@ function BracketMatchCard({ node }: { node: BracketNode }) {
       <BracketTeamRow participant={node.away} match={node.match} side="away" />
     </>
   )
+  const mobileLabel = `${node.home.label} contre ${node.away.label}`
+  const mobileCard = (
+    <button
+      className={isMobileExpanded ? 'bracket-match-mobile expanded' : 'bracket-match-mobile'}
+      style={{ left: node.left, top: node.top }}
+      type="button"
+      onClick={onMobileToggle}
+      aria-expanded={isMobileExpanded}
+      aria-label={`Afficher ${mobileLabel}`}
+    >
+      <div className="bracket-match-mobile__flags" aria-hidden="true">
+        <BracketMobileFlag participant={node.home} />
+        <BracketMobileFlag participant={node.away} />
+      </div>
+      {isMobileExpanded ? <div className="bracket-match-mobile__card">{content}</div> : null}
+    </button>
+  )
 
   if (node.match) {
     return (
-      <Link className="bracket-match" style={{ left: node.left, top: node.top }} to={`/matches/${node.match.id}`}>
-        {content}
-      </Link>
+      <>
+        <Link className="bracket-match" style={{ left: node.left, top: node.top }} to={`/matches/${node.match.id}`}>
+          {content}
+        </Link>
+        {mobileCard}
+      </>
     )
   }
 
   return (
-    <article className="bracket-match bracket-match--virtual" style={{ left: node.left, top: node.top }}>
-      {content}
-    </article>
+    <>
+      <article className="bracket-match bracket-match--virtual" style={{ left: node.left, top: node.top }}>
+        {content}
+      </article>
+      {mobileCard}
+    </>
   )
+}
+
+function BracketMobileFlag({ participant }: { participant: BracketParticipant }) {
+  if (participant.team.id === null) {
+    return <span className="bracket-match-mobile__placeholder">{participant.label.slice(0, 1)}</span>
+  }
+
+  return <TeamFlag team={participant.team} compact />
 }
 
 function BracketTeamRow({

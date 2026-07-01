@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import type { FootballMatch, Prediction } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
 import { formatMatchContext, formatMatchDateTime, isGroupPhase } from '../../utils/formatters'
+import { getEffectiveMatchState } from '../../utils/liveMatch'
 import { FavoriteButton } from './FavoriteButton'
 import { MatchReminderButton } from './MatchReminderButton'
 import { PredictionSummary } from './PredictionSummary'
@@ -20,6 +21,7 @@ export function MatchCard({ footballMatch, prediction, venueLabel }: MatchCardPr
   const [isPredictionOpen, setIsPredictionOpen] = useState(false)
   const matchLabel = `${getTeamDisplayName(footballMatch.homeTeam)} contre ${getTeamDisplayName(footballMatch.awayTeam)}`
   const matchContext = formatMatchContext(footballMatch.groupCode, footballMatch.phaseType, footballMatch.phase)
+  const effectiveState = getEffectiveMatchState(footballMatch)
   const groupLinkTarget =
     footballMatch.groupCode && isGroupPhase(footballMatch.phaseType ?? footballMatch.phase)
       ? `/groups/${footballMatch.groupCode}`
@@ -28,7 +30,7 @@ export function MatchCard({ footballMatch, prediction, venueLabel }: MatchCardPr
   return (
     <article className="match-card">
       <div className="match-card__meta">
-        <StatusBadge status={footballMatch.status} minute={footballMatch.currentMinute} />
+        <StatusBadge status={effectiveState.status} minute={effectiveState.currentMinute} />
         {groupLinkTarget ? (
           <Link className="inline-card-link" to={groupLinkTarget}>
             {matchContext}

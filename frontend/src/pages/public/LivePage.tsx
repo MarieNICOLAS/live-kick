@@ -12,6 +12,7 @@ import { getStadiums } from '../../services/stadiumService'
 import { useNotificationsStore } from '../../stores/notificationsStore'
 import type { FootballMatch, Prediction } from '../../types/football'
 import { formatMatchDateTime, getMatchTimestamp } from '../../utils/formatters'
+import { isEffectivelyLive, withEffectiveMatchState } from '../../utils/liveMatch'
 import { getMatchLabel, type ReminderOffset } from '../../utils/matchReminders'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
@@ -148,24 +149,29 @@ export function LivePage() {
     return () => window.clearInterval(intervalId)
   }, [])
 
+  const effectiveFootballMatches = useMemo(
+    () => footballMatches.map((footballMatch) => withEffectiveMatchState(footballMatch, now)),
+    [footballMatches, now],
+  )
+
   const liveMatches = useMemo(
     () =>
-      footballMatches
+      effectiveFootballMatches
         .filter((footballMatch) => footballMatch.status === 'LIVE' || footballMatch.status === 'HALF_TIME')
         .sort(sortByKickoffDate),
-    [footballMatches],
+    [effectiveFootballMatches],
   )
 
   const upcomingMatches = useMemo(
     () =>
-      footballMatches
+      effectiveFootballMatches
         .filter((footballMatch) => {
           const kickoffTime = getMatchTimestamp(footballMatch.matchDate, footballMatch.stadiumId)
-          return footballMatch.status === 'SCHEDULED' && kickoffTime >= now
+          return footballMatch.status === 'SCHEDULED' && kickoffTime >= now && !isEffectivelyLive(footballMatch, now)
         })
         .sort(sortByKickoffDate)
         .slice(0, 2),
-    [footballMatches, now],
+    [effectiveFootballMatches, now],
   )
 
   async function toggleReminder(matchId: number, offsetMinutes: ReminderOffset) {
@@ -203,7 +209,15 @@ export function LivePage() {
           <Radio size={16} aria-hidden="true" />
           Direct
         </span>
-        <h1>Centre live</h1>
+        <h1>
+          Centre live
+          {liveMatches.length > 0 ? (
+            <span className="live-heading-count">
+              <span aria-hidden="true" />
+              {liveMatches.length} en cours
+            </span>
+          ) : null}
+        </h1>
         <p>Suivez les matchs en cours ou préparez les prochains coups d'envoi.</p>
       </div>
 

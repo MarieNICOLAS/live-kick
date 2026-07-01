@@ -56,8 +56,8 @@ const stadiumTimeZones: Record<number, string> = {
 }
 
 export function formatMatchStatus(status: MatchStatus, minute?: number | null) {
-  if (status === 'LIVE' && minute) {
-    return `${minute}' · Direct`
+  if (status === 'LIVE') {
+    return minute ? `LIVE ${minute}'` : 'LIVE'
   }
 
   return statusLabels[status] ?? status
