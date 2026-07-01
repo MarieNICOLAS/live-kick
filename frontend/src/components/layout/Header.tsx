@@ -8,6 +8,7 @@ const mainLinks = [
   { to: '/', label: 'Accueil' },
   { to: '/calendar', label: 'Calendrier' },
   { to: '/groups', label: 'Groupes' },
+  { to: '/bracket', label: 'Tableau' },
   { to: '/stadiums', label: 'Stades' },
   { to: '/teams', label: 'Equipes' },
   { to: '/stats', label: 'Statistiques' },

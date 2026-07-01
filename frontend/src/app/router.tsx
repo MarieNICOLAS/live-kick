@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { BracketPage } from '../pages/public/BracketPage'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import { CalendarPage } from '../pages/public/CalendarPage'
 import { FavoritesPage } from '../pages/public/FavoritesPage'
@@ -45,6 +46,10 @@ const router = createBrowserRouter([
       {
         path: 'groups',
         element: <GroupsPage />,
+      },
+      {
+        path: 'bracket',
+        element: <BracketPage />,
       },
       {
         path: 'groups/:code',
