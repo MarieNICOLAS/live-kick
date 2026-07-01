@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Activity, BarChart3, CalendarDays, TrendingUp, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { GroupStandingTable } from '../../components/football/GroupStandingTable'
@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/Button'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
 import { demoCompetitionGroups, demoFootballMatches, demoPrediction } from '../../fixtures/liveKickDemoData'
+import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import { getCompetitionGroups } from '../../services/groupService'
 import { getFootballMatches } from '../../services/matchService'
 import { getKnownMatchPredictions, getMatchPrediction } from '../../services/predictionService'
@@ -95,6 +96,32 @@ export function HomePage() {
       isMounted = false
     }
   }, [])
+
+  const refreshHomeData = useCallback(async () => {
+    try {
+      const [matchesResponse, groupsResponse, stadiumsResponse] = await Promise.all([
+        getFootballMatches(),
+        getCompetitionGroups(),
+        getStadiums(),
+      ])
+
+      setFootballMatches(matchesResponse)
+      setCompetitionGroups(groupsResponse)
+      setStadiumLabels(buildStadiumLabelMap(stadiumsResponse))
+      setError(null)
+
+      try {
+        const predictionsResponse = await getKnownMatchPredictions()
+        setPredictionsByMatchId(Object.fromEntries(predictionsResponse.map((prediction) => [prediction.matchId, prediction])))
+      } catch {
+        setPredictionsByMatchId({})
+      }
+    } catch {
+      setError("Actualisation automatique indisponible. Les dernières données chargées restent affichées.")
+    }
+  }, [])
+
+  useAutoRefresh(refreshHomeData, { enabled: !isLoading, intervalMs: 45_000 })
 
   const featuredMatch = useMemo(() => pickFeaturedMatch(footballMatches), [footballMatches])
 

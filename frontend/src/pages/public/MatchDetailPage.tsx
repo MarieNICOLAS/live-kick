@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PredictionPanel } from '../../components/football/PredictionPanel'
 import { Scoreboard } from '../../components/football/Scoreboard'
@@ -7,7 +7,8 @@ import { Button } from '../../components/ui/Button'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
 import { demoFootballMatches, demoPrediction } from '../../fixtures/liveKickDemoData'
-import { getFootballMatchById } from '../../services/matchService'
+import { useAutoRefresh } from '../../hooks/useAutoRefresh'
+import { getFootballMatchById, getFootballMatchLiveState } from '../../services/matchService'
 import { getMatchPrediction } from '../../services/predictionService'
 import { getPlayers } from '../../services/playerService'
 import { getStadiumById } from '../../services/stadiumService'
@@ -108,6 +109,36 @@ export function MatchDetailPage() {
       isMounted = false
     }
   }, [id])
+
+  const refreshMatchLiveState = useCallback(async () => {
+    if (!id) {
+      return
+    }
+
+    try {
+      const liveState = await getFootballMatchLiveState(id)
+      setFootballMatch((currentMatch) => {
+        if (!currentMatch || currentMatch.id !== liveState.id) {
+          return currentMatch
+        }
+
+        return {
+          ...currentMatch,
+          status: liveState.status,
+          homeScore: liveState.homeScore,
+          awayScore: liveState.awayScore,
+          currentMinute: liveState.currentMinute,
+        }
+      })
+    } catch {
+      // Le détail complet reste affiché si le live ponctuel échoue.
+    }
+  }, [id])
+
+  useAutoRefresh(refreshMatchLiveState, {
+    enabled: !isLoading && footballMatch !== null && footballMatch.status !== 'FINISHED',
+    intervalMs: 15_000,
+  })
 
   if (isLoading) {
     return (

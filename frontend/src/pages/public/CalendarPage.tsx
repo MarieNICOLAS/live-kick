@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MatchCard } from '../../components/football/MatchCard'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
 import { demoFootballMatches } from '../../fixtures/liveKickDemoData'
+import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import { getFootballMatches } from '../../services/matchService'
 import { getKnownMatchPredictions } from '../../services/predictionService'
 import { getStadiums } from '../../services/stadiumService'
@@ -147,6 +148,30 @@ export function CalendarPage() {
       isMounted = false
     }
   }, [])
+
+  const refreshMatches = useCallback(async () => {
+    try {
+      const [matchesResponse, stadiumsResponse] = await Promise.all([
+        getFootballMatches(),
+        getStadiums(),
+      ])
+
+      setFootballMatches(matchesResponse)
+      setStadiumLabels(buildStadiumLabelMap(stadiumsResponse))
+      setError(null)
+
+      try {
+        const predictionsResponse = await getKnownMatchPredictions()
+        setPredictionsByMatchId(Object.fromEntries(predictionsResponse.map((prediction) => [prediction.matchId, prediction])))
+      } catch {
+        setPredictionsByMatchId({})
+      }
+    } catch {
+      setError("Actualisation automatique indisponible. Les dernières données chargées restent affichées.")
+    }
+  }, [])
+
+  useAutoRefresh(refreshMatches, { enabled: !isLoading, intervalMs: 30_000 })
 
   const filteredMatches = useMemo(
     () =>
