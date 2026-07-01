@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Medal, Table2, Trophy } from 'lucide-react'
+import { ChevronDown, Medal, Table2, Trophy } from 'lucide-react'
 import { GroupStandingTable } from '../../components/football/GroupStandingTable'
 import { TeamFlag } from '../../components/football/TeamFlag'
 import { ErrorState } from '../../components/ui/ErrorState'
@@ -186,74 +186,127 @@ export function GroupsPage() {
       </section>
 
       {groupFilter === 'ALL' && overallStandings.length > 0 ? (
-        <section className="standing-table standing-table--overall" aria-labelledby="overall-standing">
-          <div className="standing-table__header">
-            <div>
-              <h2 id="overall-standing">Classement général</h2>
-              <span>Toutes les équipes, triées par points puis différence de buts</span>
-            </div>
-          </div>
-          <div className="standing-table__scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Équipe</th>
-                  <th scope="col">Gr.</th>
-                  {standingColumnDefinitions.map((column) => (
-                    <th scope="col" key={column.shortLabel}>
-                      <abbr title={column.fullLabel}>{column.shortLabel}</abbr>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {overallStandings.map((standing, index) => {
-                  const groupRank = getGroupRank(groups, standing)
-
-                  return (
-                    <tr key={`${standing.groupCode}-${standing.team.id ?? standing.team.name}`}>
-                      <td data-label="Position générale">
-                        <span className="rank-cell">
-                          <span className={groupRank >= 0 && groupRank < 2 ? 'rank-badge rank-badge--qualified' : 'rank-badge'}>{index + 1}</span>
-                          {groupRank >= 0 && groupRank < 2 ? <span className="standing-status">Qualif.</span> : null}
-                        </span>
-                      </td>
-                      <td data-label="Équipe">
-                        <Link className="standing-team" to={standing.team.id === null ? '/teams' : `/teams/${standing.team.id}`}>
-                          <TeamFlag team={standing.team} compact />
-                          {getTeamDisplayName(standing.team)}
-                        </Link>
-                      </td>
-                      <td data-label="Groupe">
-                        <Link className="metric-link" to={`/groups/${standing.groupCode}`}>
-                          {standing.groupCode}
-                        </Link>
-                      </td>
-                      <td data-label="Matchs joués">{standing.matchesPlayed}</td>
-                      <td data-label="Victoires">{standing.wins}</td>
-                      <td data-label="Nuls">{standing.draws}</td>
-                      <td data-label="Défaites">{standing.losses}</td>
-                      <td data-label="Buts marqués">{standing.goalsFor}</td>
-                      <td data-label="Buts encaissés">{standing.goalsAgainst}</td>
-                      <td data-label="Différence">{formatGoalDifference(standing.goalDifference)}</td>
-                      <td data-label="Points">
-                        <strong>{standing.points}</strong>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <OverallStandingAccordion standings={overallStandings} groups={groups} />
       ) : null}
 
       <div className="group-grid">
         {visibleGroups.map((group) => (
-          <GroupStandingTable key={group.code} group={group} />
+          <GroupStandingTable key={group.code} group={group} variant="accordion" />
         ))}
       </div>
     </section>
   )
+}
+
+function OverallStandingAccordion({
+  groups,
+  standings,
+}: {
+  groups: CompetitionGroup[]
+  standings: OverallStanding[]
+}) {
+  const firstStanding = standings[0]
+  const [openStandingKey, setOpenStandingKey] = useState(() => getOverallStandingKey(firstStanding))
+
+  useEffect(() => {
+    setOpenStandingKey(getOverallStandingKey(firstStanding))
+  }, [firstStanding])
+
+  return (
+    <section className="standing-table standing-table--accordion standing-table--overall" aria-labelledby="overall-standing">
+      <div className="standing-table__header">
+        <div>
+          <h2 id="overall-standing">Classement général</h2>
+          <span>Toutes les équipes, triées par points puis différence de buts</span>
+        </div>
+      </div>
+
+      <div className="standing-accordion">
+        {standings.map((standing, index) => {
+          const standingKey = getOverallStandingKey(standing)
+          const groupRank = getGroupRank(groups, standing)
+          const isOpen = openStandingKey === standingKey
+          const isQualified = groupRank >= 0 && groupRank < 2
+
+          return (
+            <article className={isOpen ? 'standing-accordion__item open' : 'standing-accordion__item'} key={standingKey}>
+              <button
+                className="standing-accordion__toggle"
+                type="button"
+                aria-expanded={isOpen}
+                onClick={() => setOpenStandingKey(isOpen ? '' : standingKey)}
+              >
+                <span className="standing-accordion__rank">
+                  <span className={isQualified ? 'rank-badge rank-badge--qualified' : 'rank-badge'}>{index + 1}</span>
+                  {isQualified ? <span className="standing-status">Qualif.</span> : null}
+                </span>
+
+                <span className="standing-accordion__team">
+                  <TeamFlag team={standing.team} compact />
+                  <strong>{getTeamDisplayName(standing.team)}</strong>
+                </span>
+
+                <ChevronDown className="standing-accordion__icon" size={18} aria-hidden="true" />
+              </button>
+
+              {isOpen ? (
+                <dl className="standing-accordion__stats">
+                  <div>
+                    <dt>Groupe</dt>
+                    <dd>
+                      <Link className="metric-link" to={`/groups/${standing.groupCode}`}>
+                        {standing.groupCode}
+                      </Link>
+                    </dd>
+                  </div>
+                  {standingColumnDefinitions.map((column) => (
+                    <div key={column.shortLabel}>
+                      <dt>{column.fullLabel}</dt>
+                      <dd>{formatStandingValue(column.shortLabel, standing)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : null}
+            </article>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function getOverallStandingKey(standing: OverallStanding | undefined) {
+  return standing ? `${standing.groupCode}-${standing.team.id ?? standing.team.name}` : ''
+}
+
+function formatStandingValue(shortLabel: string, standing: OverallStanding) {
+  if (shortLabel === 'J') {
+    return standing.matchesPlayed
+  }
+
+  if (shortLabel === 'G') {
+    return standing.wins
+  }
+
+  if (shortLabel === 'N') {
+    return standing.draws
+  }
+
+  if (shortLabel === 'P') {
+    return standing.losses
+  }
+
+  if (shortLabel === 'BP') {
+    return standing.goalsFor
+  }
+
+  if (shortLabel === 'BC') {
+    return standing.goalsAgainst
+  }
+
+  if (shortLabel === 'Diff') {
+    return formatGoalDifference(standing.goalDifference)
+  }
+
+  return standing.points
 }

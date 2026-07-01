@@ -15,6 +15,7 @@ import { useFavoritesStore } from '../../stores/favoritesStore'
 import type { CompetitionGroup, FootballMatch, Player, Stadium, Team } from '../../types/football'
 import type { FavoriteType, LocalFavorite } from '../../types/local'
 import { getCityDisplayName, getStadiumDisplayName, getTeamDisplayName } from '../../utils/displayNames'
+import { formatPlayerPosition } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 type FavoriteFilter = 'ALL' | FavoriteType | 'OTHER'
@@ -319,7 +320,7 @@ function PlayerFavoriteCard({
       <span className="eyebrow">Joueur</span>
       <h2>{player.firstName} {player.lastName}</h2>
       <p>
-        {player.position}
+        {formatPlayerPosition(player.position)}
         {player.shirtNumber ? ` · Numéro ${player.shirtNumber}` : ''}
         {team ? ` · ${getTeamDisplayName(team)}` : ''}
       </p>

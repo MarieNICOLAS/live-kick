@@ -82,9 +82,9 @@ public class FootballDataService {
             if (!freshMatches.isEmpty()) {
                 cacheRepository.saveMatches(freshMatches);
             }
-            matches = freshMatches.isEmpty() ? cacheRepository.findMatches() : freshMatches;
+            matches = freshMatches.isEmpty() ? findNormalizedCachedMatches() : freshMatches;
         } catch (ExternalServiceException exception) {
-            matches = cacheRepository.findMatches();
+            matches = findNormalizedCachedMatches();
             if (matches.isEmpty()) {
                 throw exception;
             }
@@ -175,6 +175,12 @@ public class FootballDataService {
         return getTeams(null).stream()
                 .filter(team -> team.id() != null)
                 .collect(Collectors.toMap(TeamDto::id, Function.identity(), (first, second) -> first));
+    }
+
+    private List<FootballMatchDto> findNormalizedCachedMatches() {
+        return cacheRepository.findMatches().stream()
+                .map(mapper::normalizeKnownFixtureVenue)
+                .toList();
     }
 
     private boolean equalsIgnoreCase(String currentValue, String expectedValue) {

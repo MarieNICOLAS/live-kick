@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Activity, BarChart3, Goal, ShieldCheck, TrendingUp } from 'lucide-react'
 import { TeamFlag } from '../../components/football/TeamFlag'
+import { Button } from '../../components/ui/Button'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
 import { demoFootballMatches, demoTeams } from '../../fixtures/liveKickDemoData'
@@ -242,39 +244,36 @@ export function StatsPage() {
     [secondTeamId, teams],
   )
 
-  useEffect(() => {
-    let isMounted = true
+  async function handleComparisonSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
 
-    async function loadComparison() {
-      if (!firstTeam || !secondTeam || firstTeam.id === secondTeam.id) {
-        setComparison(null)
-        return
-      }
-
-      setIsLoadingComparison(true)
-
-      try {
-        const comparisonResponse = await compareTeams(firstTeam.id, secondTeam.id)
-        if (isMounted) {
-          setComparison(comparisonResponse)
-        }
-      } catch {
-        if (isMounted) {
-          setComparison(buildDemoComparison(firstTeam, secondTeam))
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingComparison(false)
-        }
-      }
+    if (!firstTeam || !secondTeam || firstTeam.id === secondTeam.id) {
+      setComparison(null)
+      return
     }
 
-    loadComparison()
+    setComparison(null)
+    setIsLoadingComparison(true)
 
-    return () => {
-      isMounted = false
+    try {
+      const comparisonResponse = await compareTeams(firstTeam.id, secondTeam.id)
+      setComparison(comparisonResponse)
+    } catch {
+      setComparison(buildDemoComparison(firstTeam, secondTeam))
+    } finally {
+      setIsLoadingComparison(false)
     }
-  }, [firstTeam, secondTeam])
+  }
+
+  function handleFirstTeamChange(value: number) {
+    setFirstTeamId(value)
+    setComparison(null)
+  }
+
+  function handleSecondTeamChange(value: number) {
+    setSecondTeamId(value)
+    setComparison(null)
+  }
 
   const comparisonMetrics = useMemo(
     () => (comparison ? buildComparisonMetrics(comparison) : []),
@@ -311,14 +310,15 @@ export function StatsPage() {
         <p>Analysez la forme, l'efficacité offensive et la solidité défensive des équipes de la Coupe du Monde 2026.</p>
       </div>
 
-      <section className="stats-selector-panel">
+      <form className="stats-selector-panel" onSubmit={handleComparisonSubmit}>
         <TeamSelect
           id="first-team"
           label="Équipe 1"
           teams={teams}
           value={firstTeamId}
           blockedTeamId={secondTeamId}
-          onChange={setFirstTeamId}
+          disabled={isLoadingComparison}
+          onChange={handleFirstTeamChange}
         />
         <span className="stats-versus">VS</span>
         <TeamSelect
@@ -327,9 +327,15 @@ export function StatsPage() {
           teams={teams}
           value={secondTeamId}
           blockedTeamId={firstTeamId}
-          onChange={setSecondTeamId}
+          disabled={isLoadingComparison}
+          onChange={handleSecondTeamChange}
         />
-      </section>
+        <div className="stats-selector-actions">
+          <Button type="submit" disabled={!firstTeam || !secondTeam || firstTeam.id === secondTeam.id || isLoadingComparison}>
+            {isLoadingComparison ? 'Calcul en cours...' : 'Comparer'}
+          </Button>
+        </div>
+      </form>
 
       {isLoadingComparison ? <Spinner label="Calcul de la comparaison..." /> : null}
 
@@ -380,6 +386,7 @@ export function StatsPage() {
 
 function TeamSelect({
   blockedTeamId,
+  disabled = false,
   id,
   label,
   onChange,
@@ -387,6 +394,7 @@ function TeamSelect({
   value,
 }: {
   blockedTeamId: number | null
+  disabled?: boolean
   id: string
   label: string
   onChange: (value: number) => void
@@ -398,6 +406,7 @@ function TeamSelect({
       <span>{label}</span>
       <select
         id={id}
+        disabled={disabled}
         value={value ?? ''}
         onChange={(event) => onChange(Number(event.target.value))}
       >

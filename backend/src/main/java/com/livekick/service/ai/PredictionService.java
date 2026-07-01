@@ -1,8 +1,12 @@
 package com.livekick.service.ai;
 
 import com.livekick.dto.ai.PredictionDto;
+import com.livekick.dto.football.CompetitionGroupDto;
 import com.livekick.dto.football.FootballMatchDto;
+import com.livekick.dto.football.GroupStandingDto;
 import com.livekick.dto.football.StadiumDto;
+import com.livekick.dto.football.TeamFormMatchDto;
+import com.livekick.dto.football.TeamStatisticsDto;
 import com.livekick.dto.football.TeamSummaryDto;
 import com.livekick.exception.BadRequestException;
 import com.livekick.exception.ExternalServiceException;
@@ -10,10 +14,12 @@ import com.livekick.integration.ai.AiPredictionClient;
 import com.livekick.integration.ai.AiPredictionRequest;
 import com.livekick.repository.PredictionRepository;
 import com.livekick.service.football.FootballDataService;
+import com.livekick.service.football.TeamStatisticsService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -24,15 +30,18 @@ public class PredictionService {
 
     private final PredictionRepository predictionRepository;
     private final FootballDataService footballDataService;
+    private final TeamStatisticsService teamStatisticsService;
     private final AiPredictionClient aiPredictionClient;
 
     public PredictionService(
             PredictionRepository predictionRepository,
             FootballDataService footballDataService,
+            TeamStatisticsService teamStatisticsService,
             AiPredictionClient aiPredictionClient
     ) {
         this.predictionRepository = predictionRepository;
         this.footballDataService = footballDataService;
+        this.teamStatisticsService = teamStatisticsService;
         this.aiPredictionClient = aiPredictionClient;
     }
 
@@ -75,15 +84,18 @@ public class PredictionService {
                 return prediction;
             }
         } catch (ExternalServiceException exception) {
-            return buildLocalPrediction(match, "Le service IA est indisponible. LiveKick utilise une estimation locale basée sur les équipes connues.");
+            return buildLocalPrediction(match, "Le service IA est indisponible. LiveKick utilise les donnees locales disponibles.");
         }
 
-        return buildLocalPrediction(match, "Le moteur IA a retourné une prédiction vide. LiveKick utilise une estimation locale basée sur les équipes connues.");
+        return buildLocalPrediction(match, "Le moteur IA a retourne une prediction vide. LiveKick utilise les donnees locales disponibles.");
     }
 
     private PredictionDto buildLocalPrediction(FootballMatchDto match, String reason) {
-        double homeStrength = teamStrength(match.homeTeam()) + 2.5;
-        double awayStrength = teamStrength(match.awayTeam());
+        TeamPredictionProfile homeProfile = buildTeamPredictionProfile(match.homeTeam(), match.groupCode());
+        TeamPredictionProfile awayProfile = buildTeamPredictionProfile(match.awayTeam(), match.groupCode());
+
+        double homeStrength = homeProfile.strength() + 2.5;
+        double awayStrength = awayProfile.strength();
         double strengthGap = homeStrength - awayStrength;
 
         double drawProbability = roundProbability(clamp(18.0, 32.0, 28.0 - Math.abs(strengthGap) * 0.38));
@@ -91,10 +103,14 @@ public class PredictionService {
         double homeShare = clamp(0.22, 0.78, 0.5 + strengthGap / 70.0);
         double homeWinProbability = roundProbability(remainingProbability * homeShare);
         double awayWinProbability = roundProbability(100.0 - drawProbability - homeWinProbability);
-        double confidenceScore = roundProbability(clamp(54.0, 79.0, 58.0 + Math.abs(strengthGap) * 0.62));
+        double confidenceScore = roundProbability(clamp(
+                54.0,
+                84.0,
+                56.0 + Math.abs(strengthGap) * 0.55 + (homeProfile.dataConfidence() + awayProfile.dataConfidence()) / 2.0
+        ));
 
-        int homeScore = predictedGoals(homeStrength, strengthGap, match.id());
-        int awayScore = predictedGoals(awayStrength, -strengthGap, match.id() == null ? 0L : match.id() + 17L);
+        int homeScore = predictedGoals(homeProfile.attackRating(), awayProfile.defenseRating(), 0.18);
+        int awayScore = predictedGoals(awayProfile.attackRating(), homeProfile.defenseRating(), 0.0);
 
         return new PredictionDto(
                 null,
@@ -106,23 +122,145 @@ public class PredictionService {
                 awayScore,
                 confidenceScore,
                 LOCAL_MODEL_NAME,
-                reason + " Les probabilités restent indicatives et seront remplacées automatiquement si le service IA renvoie une prédiction complète.",
+                buildLocalExplanation(reason, homeProfile, awayProfile),
                 Instant.now()
         );
     }
 
-    private double teamStrength(TeamSummaryDto team) {
-        String seed = (Optional.ofNullable(team.fifaCode()).orElse("") + Optional.ofNullable(team.name()).orElse(""))
-                .toUpperCase();
-        int hash = Math.abs(seed.hashCode());
-        return 48.0 + (hash % 3600) / 100.0;
+    private TeamPredictionProfile buildTeamPredictionProfile(TeamSummaryDto team, String groupCode) {
+        TeamStatisticsDto statistics = resolveStatistics(team);
+        GroupStandingDto standing = resolveGroupStanding(team, groupCode);
+
+        boolean hasStatistics = statistics != null && safeInteger(statistics.matchesPlayed()) > 0;
+        boolean hasStanding = standing != null && safeInteger(standing.matchesPlayed()) > 0;
+
+        double attackRating = 1.2;
+        double defenseRating = 1.2;
+        double strength = 50.0;
+        double dataConfidence = 0.0;
+
+        if (hasStatistics) {
+            int matchesPlayed = safeInteger(statistics.matchesPlayed());
+            double goalDifferencePerMatch = safeInteger(statistics.goalDifference()) * 1.0 / matchesPlayed;
+            double recentFormScore = recentFormScore(statistics.recentForm());
+
+            attackRating = positiveOrDefault(statistics.averageGoalsFor(), attackRating);
+            defenseRating = positiveOrDefault(statistics.averageGoalsAgainst(), defenseRating);
+            strength += (safeDouble(statistics.winRate()) - 33.0) * 0.28;
+            strength += goalDifferencePerMatch * 5.0;
+            strength += recentFormScore * 2.0;
+            dataConfidence += 8.0;
+        }
+
+        if (hasStanding) {
+            int matchesPlayed = safeInteger(standing.matchesPlayed());
+            double pointsPerMatch = safeInteger(standing.points()) * 1.0 / matchesPlayed;
+            double goalDifferencePerMatch = safeInteger(standing.goalDifference()) * 1.0 / matchesPlayed;
+            double goalsForPerMatch = safeInteger(standing.goalsFor()) * 1.0 / matchesPlayed;
+            double goalsAgainstPerMatch = safeInteger(standing.goalsAgainst()) * 1.0 / matchesPlayed;
+
+            attackRating = Math.max(attackRating, goalsForPerMatch);
+            defenseRating = Math.min(defenseRating, goalsAgainstPerMatch);
+            strength += (pointsPerMatch - 1.25) * 8.0;
+            strength += goalDifferencePerMatch * 4.0;
+            strength += (goalsForPerMatch - goalsAgainstPerMatch) * 2.0;
+            dataConfidence += 7.0;
+        }
+
+        return new TeamPredictionProfile(
+                displayTeamName(team),
+                clamp(25.0, 85.0, strength),
+                clamp(0.2, 3.4, attackRating),
+                clamp(0.2, 3.4, defenseRating),
+                dataConfidence,
+                hasStatistics,
+                hasStanding
+        );
     }
 
-    private int predictedGoals(double strength, double advantage, Long seed) {
-        long normalizedSeed = seed == null ? 0L : Math.abs(seed);
-        double seedBoost = (normalizedSeed % 3) * 0.18;
-        double rawGoals = 0.65 + strength / 52.0 + advantage / 38.0 + seedBoost;
+    private TeamStatisticsDto resolveStatistics(TeamSummaryDto team) {
+        if (team == null || team.id() == null) {
+            return null;
+        }
+
+        try {
+            return teamStatisticsService.getTeamStatistics(team.id());
+        } catch (RuntimeException exception) {
+            return null;
+        }
+    }
+
+    private GroupStandingDto resolveGroupStanding(TeamSummaryDto team, String groupCode) {
+        if (team == null || team.id() == null || isBlank(groupCode)) {
+            return null;
+        }
+
+        try {
+            CompetitionGroupDto group = footballDataService.getGroup(groupCode);
+            if (group == null || group.standings() == null) {
+                return null;
+            }
+
+            return group.standings().stream()
+                    .filter(standing -> standing.team() != null)
+                    .filter(standing -> Objects.equals(standing.team().id(), team.id()))
+                    .findFirst()
+                    .orElse(null);
+        } catch (RuntimeException exception) {
+            return null;
+        }
+    }
+
+    private double recentFormScore(List<TeamFormMatchDto> recentForm) {
+        if (recentForm == null || recentForm.isEmpty()) {
+            return 0.0;
+        }
+
+        double total = 0.0;
+        for (TeamFormMatchDto match : recentForm) {
+            total += switch (Optional.ofNullable(match.result()).orElse("")) {
+                case "WIN" -> 1.0;
+                case "DRAW" -> 0.25;
+                case "LOSS" -> -0.75;
+                default -> 0.0;
+            };
+        }
+        return total / recentForm.size();
+    }
+
+    private int predictedGoals(double ownAttackRating, double opponentDefenseRating, double homeAdvantage) {
+        double rawGoals = 0.55 + ownAttackRating * 0.58 + opponentDefenseRating * 0.22 + homeAdvantage;
         return (int) Math.round(clamp(0.0, 4.0, rawGoals));
+    }
+
+    private String buildLocalExplanation(String reason, TeamPredictionProfile homeProfile, TeamPredictionProfile awayProfile) {
+        String dataSource = homeProfile.hasDatabaseData() || awayProfile.hasDatabaseData()
+                ? "Calcul effectue depuis SQLite: classements de groupe, buts, resultats et forme recente disponibles."
+                : "Les donnees SQLite sont insuffisantes pour ces equipes; LiveKick applique une base neutre sans donnees mockees.";
+
+        return reason + " " + dataSource + " Comparaison locale: "
+                + homeProfile.teamName() + " force " + roundProbability(homeProfile.strength())
+                + ", " + awayProfile.teamName() + " force " + roundProbability(awayProfile.strength())
+                + ". La prediction sera remplacee automatiquement si le service IA renvoie une prediction complete.";
+    }
+
+    private String displayTeamName(TeamSummaryDto team) {
+        return Optional.ofNullable(team)
+                .map(TeamSummaryDto::name)
+                .filter(name -> !name.isBlank())
+                .orElse("Equipe inconnue");
+    }
+
+    private double positiveOrDefault(Double value, double defaultValue) {
+        return value == null || value <= 0.0 ? defaultValue : value;
+    }
+
+    private int safeInteger(Integer value) {
+        return value == null ? 0 : value;
+    }
+
+    private double safeDouble(Double value) {
+        return value == null ? 0.0 : value;
     }
 
     private double clamp(double minimum, double maximum, double value) {
@@ -248,5 +386,19 @@ public class PredictionService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private record TeamPredictionProfile(
+            String teamName,
+            double strength,
+            double attackRating,
+            double defenseRating,
+            double dataConfidence,
+            boolean hasStatistics,
+            boolean hasStanding
+    ) {
+        private boolean hasDatabaseData() {
+            return hasStatistics || hasStanding;
+        }
     }
 }

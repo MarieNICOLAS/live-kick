@@ -21,11 +21,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Component
 public class WorldCup2026Mapper {
 
     private static final DateTimeFormatter PROVIDER_DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm");
+    private static final Pattern MINUTE_PATTERN = Pattern.compile("^\\s*(\\d{1,3})(?:\\s*(?:'|\\+|min|minute|$))", Pattern.CASE_INSENSITIVE);
 
     public TeamDto toTeamDto(WorldCupTeamPayload team) {
         return new TeamDto(
@@ -51,7 +53,7 @@ public class WorldCup2026Mapper {
     }
 
     public FootballMatchDto toFootballMatchDto(WorldCupGamePayload game, Map<Long, TeamDto> teamsById) {
-        return new FootballMatchDto(
+        FootballMatchDto match = new FootballMatchDto(
                 positiveLongOrNull(game.id()),
                 parseMatchDate(game.localDate()),
                 mapStatus(game),
@@ -66,6 +68,8 @@ public class WorldCup2026Mapper {
                 toTeamSummary(game.awayTeamId(), game.awayTeamNameEn(), game.awayTeamLabel(), teamsById),
                 positiveLongOrNull(game.stadiumId())
         );
+
+        return normalizeKnownFixtureVenue(match);
     }
 
     public FootballMatchLiveDto toFootballMatchLiveDto(FootballMatchDto match) {
@@ -128,7 +132,8 @@ public class WorldCup2026Mapper {
             return "FINISHED";
         }
         String timeElapsed = Optional.ofNullable(game.timeElapsed()).orElse("").trim();
-        if (timeElapsed.matches("\\d+")) {
+        String normalizedTimeElapsed = timeElapsed.toLowerCase().replaceAll("[_\\s-]+", "");
+        if (parseCurrentMinute(timeElapsed) != null) {
             return "LIVE";
         }
         return switch (timeElapsed.toLowerCase()) {
@@ -136,8 +141,77 @@ public class WorldCup2026Mapper {
             case "halftime", "half-time" -> "HALF_TIME";
             case "postponed" -> "POSTPONED";
             case "cancelled", "canceled" -> "CANCELLED";
-            default -> "SCHEDULED";
+            default -> switch (normalizedTimeElapsed) {
+                case "live", "inprogress", "playing", "firsthalf", "1sthalf", "secondhalf", "2ndhalf" -> "LIVE";
+                default -> "SCHEDULED";
+            };
         };
+    }
+
+    public FootballMatchDto normalizeKnownFixtureVenue(FootballMatchDto match) {
+        if (hasTeams(match, "ENG", "COD")) {
+            return withStadium(match, 6L);
+        }
+
+        if (hasTeams(match, "BEL", "SEN")) {
+            return withStadium(match, 16L);
+        }
+
+        if (hasTeams(match, "USA", "BIH")) {
+            return withStadium(match, 7L);
+        }
+
+        if (hasTeams(match, "ESP", "AUT")) {
+            return withStadium(match, 8L);
+        }
+
+        if (hasTeams(match, "POR", "CRO")) {
+            return withStadium(match, 4L);
+        }
+
+        if (hasTeams(match, "SUI", "ALG")) {
+            return withStadium(match, 5L);
+        }
+
+        if (hasTeams(match, "AUS", "EGY")) {
+            return withStadium(match, 15L);
+        }
+
+        if (hasTeams(match, "ARG", "CPV")) {
+            return withStadium(match, 12L);
+        }
+
+        if (hasTeams(match, "COL", "GHA")) {
+            return withStadium(match, 14L);
+        }
+
+        return match;
+    }
+
+    private boolean hasTeams(FootballMatchDto match, String firstFifaCode, String secondFifaCode) {
+        String homeCode = Optional.ofNullable(match.homeTeam()).map(TeamSummaryDto::fifaCode).orElse("");
+        String awayCode = Optional.ofNullable(match.awayTeam()).map(TeamSummaryDto::fifaCode).orElse("");
+
+        return (firstFifaCode.equalsIgnoreCase(homeCode) && secondFifaCode.equalsIgnoreCase(awayCode))
+                || (firstFifaCode.equalsIgnoreCase(awayCode) && secondFifaCode.equalsIgnoreCase(homeCode));
+    }
+
+    private FootballMatchDto withStadium(FootballMatchDto match, Long stadiumId) {
+        return new FootballMatchDto(
+                match.id(),
+                match.matchDate(),
+                match.status(),
+                match.phase(),
+                match.phaseType(),
+                match.groupCode(),
+                match.matchday(),
+                match.homeScore(),
+                match.awayScore(),
+                match.currentMinute(),
+                match.homeTeam(),
+                match.awayTeam(),
+                stadiumId
+        );
     }
 
     private String mapPhase(String type) {
@@ -165,8 +239,16 @@ public class WorldCup2026Mapper {
     }
 
     private Integer parseCurrentMinute(String value) {
-        Integer minute = integerOrNull(value);
-        return minute == null ? null : Math.min(minute, 130);
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        var matcher = MINUTE_PATTERN.matcher(value);
+        if (!matcher.find()) {
+            return null;
+        }
+
+        return Math.min(Math.max(Integer.parseInt(matcher.group(1)), 1), 130);
     }
 
     private Integer groupDisplayOrder(String code) {

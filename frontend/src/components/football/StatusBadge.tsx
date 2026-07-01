@@ -8,7 +8,14 @@ type StatusBadgeProps = {
 }
 
 export function StatusBadge({ status, minute }: StatusBadgeProps) {
-  const variant = status === 'LIVE' ? 'live' : status === 'FINISHED' ? 'success' : status === 'POSTPONED' ? 'danger' : 'default'
+  const variant =
+    status === 'LIVE' || status === 'HALF_TIME'
+      ? 'live'
+      : status === 'FINISHED'
+        ? 'success'
+        : status === 'POSTPONED'
+          ? 'danger'
+          : 'default'
   const label = formatMatchStatus(status, minute)
 
   return <Badge variant={variant}>{label}</Badge>

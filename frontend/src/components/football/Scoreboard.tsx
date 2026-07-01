@@ -1,5 +1,6 @@
 import type { FootballMatch } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
+import { getEffectiveMatchState } from '../../utils/liveMatch'
 import { TeamFlag } from './TeamFlag'
 
 type ScoreboardProps = {
@@ -16,7 +17,8 @@ function formatScore(score: number | null, masked: boolean) {
 }
 
 export function Scoreboard({ footballMatch, compact = false }: ScoreboardProps) {
-  const scoreMasked = shouldMaskScore(footballMatch)
+  const effectiveState = getEffectiveMatchState(footballMatch)
+  const scoreMasked = shouldMaskScore({ ...footballMatch, status: effectiveState.status })
 
   return (
     <div className={compact ? 'scoreboard scoreboard--compact' : 'scoreboard'}>
@@ -26,9 +28,9 @@ export function Scoreboard({ footballMatch, compact = false }: ScoreboardProps) 
       </div>
 
       <div className="scoreboard-score" aria-label={scoreMasked ? 'Score à venir' : 'Score du match'}>
-        <strong>{formatScore(footballMatch.homeScore, scoreMasked)}</strong>
+        <strong>{formatScore(effectiveState.homeScore, scoreMasked)}</strong>
         <span>-</span>
-        <strong>{formatScore(footballMatch.awayScore, scoreMasked)}</strong>
+        <strong>{formatScore(effectiveState.awayScore, scoreMasked)}</strong>
       </div>
 
       <div className="scoreboard-team scoreboard-team--away">

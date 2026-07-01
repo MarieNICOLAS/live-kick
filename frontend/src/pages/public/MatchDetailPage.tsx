@@ -14,7 +14,15 @@ import { getPlayers } from '../../services/playerService'
 import { getStadiumById } from '../../services/stadiumService'
 import type { FootballMatch, Player, Prediction, Stadium, TeamSummary } from '../../types/football'
 import { getCityDisplayName, getStadiumDisplayName, getTeamDisplayName } from '../../utils/displayNames'
-import { formatMatchStatus, formatMatchday, formatPhase } from '../../utils/formatters'
+import {
+  formatMatchContext,
+  formatMatchStatus,
+  formatMatchday,
+  formatPhase,
+  formatPlayerPosition,
+  isGroupPhase,
+} from '../../utils/formatters'
+import { getEffectiveMatchState } from '../../utils/liveMatch'
 
 type TeamSummaryWithId = TeamSummary & { id: number }
 
@@ -80,8 +88,8 @@ export function MatchDetailPage() {
           ])
 
           if (isMounted) {
-            setHomePlayers(homePlayersResponse.slice(0, 11))
-            setAwayPlayers(awayPlayersResponse.slice(0, 11))
+            setHomePlayers(homePlayersResponse)
+            setAwayPlayers(awayPlayersResponse)
           }
         } catch {
           if (isMounted) {
@@ -162,17 +170,24 @@ export function MatchDetailPage() {
     )
   }
 
+  const matchContext = formatMatchContext(footballMatch.groupCode, footballMatch.phaseType, footballMatch.phase)
+  const effectiveState = getEffectiveMatchState(footballMatch)
+  const groupLinkTarget =
+    footballMatch.groupCode && isGroupPhase(footballMatch.phaseType ?? footballMatch.phase)
+      ? `/groups/${footballMatch.groupCode}`
+      : null
+
   return (
     <section className="match-detail-page">
       <div className="match-detail-hero">
         <div className="match-detail-hero__meta">
-          <StatusBadge status={footballMatch.status} minute={footballMatch.currentMinute} />
-          {footballMatch.groupCode ? (
-            <Link to={`/groups/${footballMatch.groupCode}`}>Groupe {footballMatch.groupCode}</Link>
+          <StatusBadge status={effectiveState.status} minute={effectiveState.currentMinute} />
+          {groupLinkTarget ? (
+            <Link to={groupLinkTarget}>{matchContext}</Link>
           ) : (
-            <span>Groupe -</span>
+            <Link to={`/calendar?phase=${footballMatch.phaseType}`}>{matchContext}</Link>
           )}
-          <span>{formatMatchday(footballMatch.matchday)}</span>
+          <span>{formatMatchday(footballMatch.matchday, footballMatch.phaseType, footballMatch.phase)}</span>
         </div>
         <Scoreboard footballMatch={footballMatch} compact />
         <p>
@@ -193,13 +208,13 @@ export function MatchDetailPage() {
           <dl className="metric-grid">
             <div>
               <dt>Minute</dt>
-              <dd>{footballMatch.currentMinute ? `${footballMatch.currentMinute}'` : '-'}</dd>
+              <dd>{effectiveState.currentMinute ? `${effectiveState.currentMinute}'` : '-'}</dd>
             </div>
             <div>
               <dt>Statut</dt>
               <dd>
-                <Link className="metric-link" to={`/calendar?status=${footballMatch.status}`}>
-                  {formatMatchStatus(footballMatch.status, footballMatch.currentMinute)}
+                <Link className="metric-link" to={`/calendar?status=${effectiveState.status}`}>
+                  {formatMatchStatus(effectiveState.status, effectiveState.currentMinute)}
                 </Link>
               </dd>
             </div>
@@ -222,8 +237,8 @@ export function MatchDetailPage() {
 
         <section className="players-panel dashboard-column--wide">
           <div className="players-panel__header">
-            <h2>Joueurs du match</h2>
-            <span>Compositions probables</span>
+            <h2>Effectifs des équipes</h2>
+            <span>Joueurs renseignés</span>
           </div>
 
           <div className="players-grid">
@@ -251,7 +266,7 @@ function TeamPlayersList({ team, players }: { team: TeamSummary; players: Player
               <strong>
                 <Link to={`/players/${player.id}`}>{player.firstName} {player.lastName}</Link>
               </strong>
-              <em>{player.position}</em>
+              <em>{formatPlayerPosition(player.position)}</em>
             </li>
           ))}
         </ul>

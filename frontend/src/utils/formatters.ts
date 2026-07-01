@@ -29,6 +29,13 @@ const phaseLabels: Record<string, string> = {
   FINAL: 'Finale',
 }
 
+const playerPositionLabels: Record<string, string> = {
+  GK: 'Gardien',
+  DF: 'Défenseur',
+  MF: 'Milieu',
+  FW: 'Attaquant',
+}
+
 const stadiumTimeZones: Record<number, string> = {
   1: 'America/Mexico_City',
   2: 'America/Mexico_City',
@@ -49,8 +56,8 @@ const stadiumTimeZones: Record<number, string> = {
 }
 
 export function formatMatchStatus(status: MatchStatus, minute?: number | null) {
-  if (status === 'LIVE' && minute) {
-    return `${minute}' · Direct`
+  if (status === 'LIVE') {
+    return minute ? `LIVE ${minute}'` : 'LIVE'
   }
 
   return statusLabels[status] ?? status
@@ -61,13 +68,58 @@ export function formatPhase(value: string | null | undefined) {
     return 'Phase à confirmer'
   }
 
-  const normalizedKey = value.trim().replaceAll('-', '_').replaceAll(' ', '_').toUpperCase()
+  const normalizedKey = normalizePhaseKey(value)
 
   return phaseLabels[normalizedKey] ?? value.replaceAll('_', ' ').toLowerCase()
 }
 
-export function formatMatchday(matchday: number | null) {
-  return matchday ? `Journée ${matchday}` : 'Journée à confirmer'
+export function isGroupPhase(value: string | null | undefined) {
+  const normalizedPhase = normalizePhaseKey(value)
+
+  return normalizedPhase === 'GROUP' || normalizedPhase === 'GROUP_STAGE'
+}
+
+export function formatMatchContext(
+  groupCode: string | null | undefined,
+  phaseType?: string | null,
+  phase?: string | null,
+) {
+  const phaseTypeValue = phaseType ?? phase
+  const phaseLabelValue = phase ?? phaseType
+
+  if (groupCode && isGroupPhase(phaseTypeValue)) {
+    return `Groupe ${groupCode}`
+  }
+
+  const normalizedGroupCode = normalizePhaseKey(groupCode)
+
+  if (normalizedGroupCode && phaseLabels[normalizedGroupCode]) {
+    return phaseLabels[normalizedGroupCode]
+  }
+
+  return formatPhase(phaseLabelValue)
+}
+
+export function formatMatchday(matchday: number | null, phaseType?: string | null, phase?: string | null) {
+  if (isGroupPhase(phaseType ?? phase)) {
+    return matchday != null && matchday >= 1 && matchday <= 3 ? `Journée ${matchday}` : 'Phase de groupes'
+  }
+
+  return formatPhase(phaseType ?? phase)
+}
+
+export function formatPlayerPosition(position: string | null | undefined) {
+  if (!position) {
+    return '-'
+  }
+
+  const normalizedPosition = position.trim().toUpperCase()
+
+  return playerPositionLabels[normalizedPosition] ?? position
+}
+
+function normalizePhaseKey(value: string | null | undefined) {
+  return value?.trim().replaceAll('-', '_').replaceAll(' ', '_').toUpperCase() ?? ''
 }
 
 const parisTimeZone = 'Europe/Paris'
@@ -152,6 +204,38 @@ export function getMatchDate(value: string, stadiumId?: number | null) {
 
 export function getMatchTimestamp(value: string, stadiumId?: number | null) {
   return getMatchDate(value, stadiumId).getTime()
+}
+
+export function getMatchDateKey(value: string, stadiumId?: number | null) {
+  const date = getMatchDate(value, stadiumId)
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: parisTimeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+
+  const year = parts.find((part) => part.type === 'year')?.value
+  const month = parts.find((part) => part.type === 'month')?.value
+  const day = parts.find((part) => part.type === 'day')?.value
+
+  return year && month && day ? `${year}-${month}-${day}` : ''
+}
+
+export function formatDateKey(value: string) {
+  if (!value) {
+    return 'Date à confirmer'
+  }
+
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${value}T12:00:00`))
+}
+
+export function formatMatchDate(value: string, stadiumId?: number | null) {
+  return formatDateKey(getMatchDateKey(value, stadiumId))
 }
 
 export function formatMatchDateTime(value: string, stadiumId?: number | null) {
