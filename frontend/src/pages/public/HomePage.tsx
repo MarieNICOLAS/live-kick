@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, CalendarDays, Trophy } from 'lucide-react'
+import { Activity, BarChart3, CalendarDays, TrendingUp, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { GroupStandingTable } from '../../components/football/GroupStandingTable'
 import { MatchCard } from '../../components/football/MatchCard'
@@ -239,6 +239,33 @@ export function HomePage() {
           {firstGroup ? <GroupStandingTable group={firstGroup} /> : null}
         </div>
       </section>
+
+      <Link className="home-stats-card" to="/stats" aria-label="Comparer les statistiques des équipes">
+        <div className="home-stats-card__content">
+          <span className="eyebrow">
+            <BarChart3 size={16} aria-hidden="true" />
+            Statistiques
+          </span>
+          <h2>Comparer les équipes</h2>
+          <p>
+            Analysez les formes récentes, les buts marqués et les tendances avant les prochains matchs.
+          </p>
+        </div>
+        <div className="home-stats-card__metrics" aria-hidden="true">
+          <span>
+            <strong>2</strong>
+            équipes
+          </span>
+          <span>
+            <strong>8</strong>
+            indicateurs
+          </span>
+          <span>
+            <TrendingUp size={22} />
+            duel
+          </span>
+        </div>
+      </Link>
     </section>
   )
 }

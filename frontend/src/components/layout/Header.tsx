@@ -1,4 +1,4 @@
-import { Activity, Bell, CalendarDays, Home, Moon, Search, Star, Sun, Trophy } from 'lucide-react'
+import { Activity, BarChart3, Bell, CalendarDays, Home, Moon, Search, Star, Sun, Trophy } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useTheme } from '../../app/themeContext'
 import iconLogo from '../../assets/logos/simply-color-logo.png'
@@ -35,6 +35,10 @@ export function Header() {
         </NavLink>
 
         <div className="header-tools">
+          <NavLink className="icon-button" to="/stats" aria-label="Statistiques">
+            <BarChart3 size={20} aria-hidden="true" />
+          </NavLink>
+
           <NavLink className="icon-button notification-button" to="/notifications" aria-label="Notifications">
             <Bell size={20} aria-hidden="true" />
             {unreadCount > 0 ? <span>{unreadCount}</span> : null}
