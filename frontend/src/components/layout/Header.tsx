@@ -1,7 +1,7 @@
-import { Activity, Bell, CalendarDays, Home, LogIn, Moon, Search, Sun, BarChart3, User } from 'lucide-react'
+import { Bell, CalendarDays, Activity, Heart, Home, Moon, Search, Sun, BarChart3 } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTheme } from '../../app/themeContext'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import iconLogo from '../../assets/logos/simply-color-logo.png'
 
 const mainLinks = [
@@ -16,18 +16,16 @@ const mainLinks = [
 
 const mobileLinks = [
   { to: '/', label: 'Accueil', Icon: Home },
-  { to: '/live', label: 'Live', Icon: Activity },
+  { to: '/live', label: 'Direct', Icon: Activity },
   { to: '/matches', label: 'Matchs', Icon: CalendarDays },
-  { to: '/groups', label: 'Stats', Icon: BarChart3 },
-  { to: '/favorites', label: 'Profil', Icon: User },
+  { to: '/groups', label: 'Groupes', Icon: BarChart3 },
+  { to: '/favorites', label: 'Favoris', Icon: Heart },
 ]
 
 export function Header() {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const ThemeIcon = theme === 'dark' ? Sun : Moon
-  const isAuthenticated = false
-  const ProfileIcon = isAuthenticated ? User : LogIn
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -91,11 +89,9 @@ export function Header() {
           <button className="icon-button" type="button" onClick={toggleTheme} aria-label="Changer de theme">
             <ThemeIcon size={21} aria-hidden="true" />
           </button>
-          <NavLink className="icon-button" to={isAuthenticated ? '/profile' : '/login'} aria-label={isAuthenticated ? 'Profil' : 'Connexion'}>
-            <ProfileIcon size={21} aria-hidden="true" />
-          </NavLink>
         </div>
       </header>
+
       <nav className="mobile-bottom-nav" aria-label="Navigation mobile">
         {mobileLinks.map(({ to, label, Icon }) => (
           <NavLink key={to} to={to}>
