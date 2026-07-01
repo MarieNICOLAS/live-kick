@@ -1409,6 +1409,27 @@
   text-decoration: none;
 }
 
+.standing-guide-button {
+  align-items: center;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  border-radius: 999px;
+  color: var(--lk-accent);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.standing-guide-button:hover,
+.standing-guide-button:focus-visible {
+  background: rgba(0, 212, 255, 0.16);
+  border-color: rgba(0, 212, 255, 0.5);
+  outline: none;
+}
+
 .standing-table__scroll {
   overflow-x: auto;
 }
@@ -1687,6 +1708,38 @@
   color: var(--lk-text-secondary);
   font-size: 13px;
   line-height: 1.45;
+}
+
+.standings-page > .standing-guide {
+  display: none;
+}
+
+.standing-guide-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.standing-guide-list div {
+  background: var(--lk-surface);
+  border: 1px solid var(--lk-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+}
+
+.standing-guide-list dt {
+  color: var(--lk-accent);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.standing-guide-list dd {
+  color: var(--lk-text-secondary);
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0;
 }
 
 .standing-help {

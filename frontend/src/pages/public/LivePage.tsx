@@ -210,7 +210,7 @@ export function LivePage() {
           Direct
         </span>
         <h1>
-          Centre live
+          Matchs en direct
           {liveMatches.length > 0 ? (
             <span className="live-heading-count">
               <span aria-hidden="true" />

@@ -517,7 +517,7 @@ function RecentFormPanel({ statistics }: { statistics: TeamStatistics }) {
             <Link className="stats-form-match" to={`/matches/${match.matchId}`} key={match.matchId}>
               <span className={resultClass(match.result)}>{resultLabel(match.result)}</span>
               <div>
-                <strong>{match.home ? 'vs' : '@'} {getTeamDisplayName(match.opponent)}</strong>
+                <strong>{getTeamDisplayName(match.opponent)}</strong>
                 <time dateTime={match.matchDate}>{formatMatchDateTime(match.matchDate)}</time>
               </div>
               <em>
