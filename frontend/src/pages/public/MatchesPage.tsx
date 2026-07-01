@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Heart, Search } from 'lucide-react'
 import { getMatches } from '../../services/matchService'
 import type { FootballMatchDto } from '../../services/matchService'
@@ -15,14 +15,19 @@ type StatusFilter = 'ALL' | 'LIVE' | 'SCHEDULED' | 'FINISHED'
 
 export function MatchesPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [matches, setMatches] = useState<FootballMatchDto[]>([])
   const [groups, setGroups] = useState<CompetitionGroupDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [groupFilter, setGroupFilter] = useState<string>('ALL')
   const { isFavorite, toggleFavorite } = useFavoritesStore()
+
+  useEffect(() => {
+    setSearch(searchParams.get('q') ?? '')
+  }, [searchParams])
 
   useEffect(() => {
     async function fetchData() {
@@ -70,7 +75,9 @@ export function MatchesPage() {
   const matchesByDate = useMemo(() => {
     const grouped: Record<string, FootballMatchDto[]> = {}
     filteredMatches.forEach((m) => {
-      const dateKey = new Date(m.matchDate).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+      const dateKey = new Date(m.matchDate).toLocaleDateString('fr-FR', {
+        weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+      })
       if (!grouped[dateKey]) grouped[dateKey] = []
       grouped[dateKey].push(m)
     })

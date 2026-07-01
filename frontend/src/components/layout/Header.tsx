@@ -1,14 +1,16 @@
 import { Activity, Bell, CalendarDays, Home, LogIn, Moon, Search, Sun, BarChart3, User } from 'lucide-react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useTheme } from '../../app/themeContext'
+import { useState, useEffect, useRef } from 'react'
 import iconLogo from '../../assets/logos/simply-color-logo.png'
 
 const mainLinks = [
   { to: '/', label: 'Accueil' },
+  { to: '/live', label: 'Live' },
   { to: '/matches', label: 'Calendrier' },
   { to: '/groups', label: 'Groupes' },
   { to: '/bracket', label: 'Tableau final' },
-  { to: '/teams', label: 'Equipes' },
+  { to: '/teams', label: 'Équipes' },
   { to: '/favorites', label: 'Favoris' },
 ]
 
@@ -17,14 +19,41 @@ const mobileLinks = [
   { to: '/live', label: 'Live', Icon: Activity },
   { to: '/matches', label: 'Matchs', Icon: CalendarDays },
   { to: '/groups', label: 'Stats', Icon: BarChart3 },
-  { to: '/profile', label: 'Profil', Icon: User },
+  { to: '/favorites', label: 'Profil', Icon: User },
 ]
 
 export function Header() {
   const { theme, toggleTheme } = useTheme()
+  const navigate = useNavigate()
   const ThemeIcon = theme === 'dark' ? Sun : Moon
   const isAuthenticated = false
   const ProfileIcon = isAuthenticated ? User : LogIn
+  const [query, setQuery] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+      if (e.key === 'Escape') {
+        setQuery('')
+        inputRef.current?.blur()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    if (query.trim()) {
+      navigate(`/matches?q=${encodeURIComponent(query.trim())}`)
+      setQuery('')
+      inputRef.current?.blur()
+    }
+  }
 
   return (
     <>
@@ -33,7 +62,6 @@ export function Header() {
           <img src={iconLogo} alt="" />
           <span>LiveKick</span>
         </NavLink>
-
         <nav className="main-nav" aria-label="Navigation principale">
           {mainLinks.map((link) => (
             <NavLink key={link.to} to={link.to}>
@@ -41,29 +69,33 @@ export function Header() {
             </NavLink>
           ))}
         </nav>
-
         <div className="header-tools">
-          <label className="search-box" htmlFor="global-search">
-            <Search size={21} aria-hidden="true" />
-            <input id="global-search" type="search" placeholder="Rechercher..." />
-            <kbd>/</kbd>
-          </label>
-
+          <form onSubmit={handleSearch}>
+            <label className="search-box" htmlFor="global-search">
+              <Search size={21} aria-hidden="true" />
+              <input
+                id="global-search"
+                ref={inputRef}
+                type="search"
+                placeholder="Rechercher..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <kbd>/</kbd>
+            </label>
+          </form>
           <button className="icon-button notification-button" type="button" aria-label="Notifications">
             <Bell size={21} aria-hidden="true" />
             <span>3</span>
           </button>
-
           <button className="icon-button" type="button" onClick={toggleTheme} aria-label="Changer de theme">
             <ThemeIcon size={21} aria-hidden="true" />
           </button>
-
           <NavLink className="icon-button" to={isAuthenticated ? '/profile' : '/login'} aria-label={isAuthenticated ? 'Profil' : 'Connexion'}>
             <ProfileIcon size={21} aria-hidden="true" />
           </NavLink>
         </div>
       </header>
-
       <nav className="mobile-bottom-nav" aria-label="Navigation mobile">
         {mobileLinks.map(({ to, label, Icon }) => (
           <NavLink key={to} to={to}>
