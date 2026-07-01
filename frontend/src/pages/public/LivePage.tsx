@@ -6,9 +6,10 @@ import { Spinner } from '../../components/ui/Spinner'
 import { demoFootballMatches } from '../../fixtures/liveKickDemoData'
 import { useMatchReminders } from '../../hooks/useMatchReminders'
 import { getFootballMatches } from '../../services/matchService'
+import { getKnownMatchPredictions } from '../../services/predictionService'
 import { getStadiums } from '../../services/stadiumService'
 import { useNotificationsStore } from '../../stores/notificationsStore'
-import type { FootballMatch } from '../../types/football'
+import type { FootballMatch, Prediction } from '../../types/football'
 import { formatMatchDateTime, getMatchTimestamp } from '../../utils/formatters'
 import { getMatchLabel, type ReminderOffset } from '../../utils/matchReminders'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
@@ -57,6 +58,7 @@ function ReminderButton({
 
 export function LivePage() {
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
+  const [predictionsByMatchId, setPredictionsByMatchId] = useState<Record<number, Prediction>>({})
   const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
   const { hasReminder, toggleReminder: toggleStoredReminder } = useMatchReminders()
   const [now, setNow] = useState(() => Date.now())
@@ -81,12 +83,24 @@ export function LivePage() {
         setFootballMatches(matchesResponse)
         setStadiumLabels(buildStadiumLabelMap(stadiumsResponse))
         setError(null)
+
+        try {
+          const predictionsResponse = await getKnownMatchPredictions()
+          if (isMounted) {
+            setPredictionsByMatchId(Object.fromEntries(predictionsResponse.map((prediction) => [prediction.matchId, prediction])))
+          }
+        } catch {
+          if (isMounted) {
+            setPredictionsByMatchId({})
+          }
+        }
       } catch {
         if (!isMounted) {
           return
         }
 
         setFootballMatches(demoFootballMatches)
+        setPredictionsByMatchId({})
         setStadiumLabels({})
         setError("L'API du serveur est indisponible, affichage des données de démonstration.")
       } finally {
@@ -173,6 +187,7 @@ export function LivePage() {
             <MatchCard
               key={footballMatch.id}
               footballMatch={footballMatch}
+              prediction={predictionsByMatchId[footballMatch.id]}
               venueLabel={getStadiumLabel(stadiumLabels, footballMatch.stadiumId)}
             />
           ))}
@@ -196,6 +211,7 @@ export function LivePage() {
 
               <MatchCard
                 footballMatch={footballMatch}
+                prediction={predictionsByMatchId[footballMatch.id]}
                 venueLabel={getStadiumLabel(stadiumLabels, footballMatch.stadiumId)}
               />
 

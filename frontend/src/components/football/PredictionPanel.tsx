@@ -10,6 +10,14 @@ type PredictionPanelProps = {
   awayTeam: TeamSummary
 }
 
+function getPredictionModelLabel(modelName: string) {
+  if (modelName === 'None') {
+    return 'Estimation LiveKick'
+  }
+
+  return modelName
+}
+
 export function PredictionPanel({ prediction, homeTeam, awayTeam }: PredictionPanelProps) {
   const confidence = prediction.confidenceScore > 1 ? prediction.confidenceScore : prediction.confidenceScore * 100
 
@@ -19,7 +27,7 @@ export function PredictionPanel({ prediction, homeTeam, awayTeam }: PredictionPa
         <BrainCircuit size={22} aria-hidden="true" />
         <div>
           <h2>Prédiction IA</h2>
-          <p>{prediction.modelName}</p>
+          <p>{getPredictionModelLabel(prediction.modelName)}</p>
         </div>
       </div>
 

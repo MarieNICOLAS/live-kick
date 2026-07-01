@@ -5,8 +5,9 @@ import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
 import { demoFootballMatches } from '../../fixtures/liveKickDemoData'
 import { getFootballMatches } from '../../services/matchService'
+import { getKnownMatchPredictions } from '../../services/predictionService'
 import { getStadiums } from '../../services/stadiumService'
-import type { FootballMatch, MatchStatus } from '../../types/football'
+import type { FootballMatch, MatchStatus, Prediction } from '../../types/football'
 import { getMatchTimestamp } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
@@ -90,6 +91,7 @@ export function CalendarPage() {
   const phaseFilter = searchParams.get('phase')
   const groupFilter = searchParams.get('group')
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
+  const [predictionsByMatchId, setPredictionsByMatchId] = useState<Record<number, Prediction>>({})
   const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
   const [statusFilter, setStatusFilter] = useState<CalendarFilter>(() => getInitialStatusFilter(searchParams.get('status')))
   const [isLoading, setIsLoading] = useState(true)
@@ -112,12 +114,24 @@ export function CalendarPage() {
         setFootballMatches(matchesResponse)
         setStadiumLabels(buildStadiumLabelMap(stadiumsResponse))
         setError(null)
+
+        try {
+          const predictionsResponse = await getKnownMatchPredictions()
+          if (isMounted) {
+            setPredictionsByMatchId(Object.fromEntries(predictionsResponse.map((prediction) => [prediction.matchId, prediction])))
+          }
+        } catch {
+          if (isMounted) {
+            setPredictionsByMatchId({})
+          }
+        }
       } catch {
         if (!isMounted) {
           return
         }
 
         setFootballMatches(demoFootballMatches)
+        setPredictionsByMatchId({})
         setStadiumLabels({})
         setError("L'API du serveur est indisponible, affichage des données de démonstration.")
       } finally {
@@ -187,6 +201,7 @@ export function CalendarPage() {
           <MatchCard
             key={footballMatch.id}
             footballMatch={footballMatch}
+            prediction={predictionsByMatchId[footballMatch.id]}
             venueLabel={getStadiumLabel(stadiumLabels, footballMatch.stadiumId)}
           />
         ))}

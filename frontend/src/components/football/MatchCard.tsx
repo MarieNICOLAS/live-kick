@@ -1,19 +1,21 @@
 import { CalendarClock, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { FootballMatch } from '../../types/football'
+import type { FootballMatch, Prediction } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
 import { formatMatchDateTime, formatPhase } from '../../utils/formatters'
 import { FavoriteButton } from './FavoriteButton'
 import { MatchReminderButton } from './MatchReminderButton'
+import { PredictionSummary } from './PredictionSummary'
 import { Scoreboard } from './Scoreboard'
 import { StatusBadge } from './StatusBadge'
 
 type MatchCardProps = {
   footballMatch: FootballMatch
+  prediction?: Prediction
   venueLabel?: string
 }
 
-export function MatchCard({ footballMatch, venueLabel }: MatchCardProps) {
+export function MatchCard({ footballMatch, prediction, venueLabel }: MatchCardProps) {
   const matchLabel = `${getTeamDisplayName(footballMatch.homeTeam)} contre ${getTeamDisplayName(footballMatch.awayTeam)}`
 
   return (
@@ -49,6 +51,14 @@ export function MatchCard({ footballMatch, venueLabel }: MatchCardProps) {
           {venueLabel ?? 'Stade à confirmer'}
         </span>
       </div>
+
+      {prediction ? (
+        <PredictionSummary
+          prediction={prediction}
+          homeTeam={footballMatch.homeTeam}
+          awayTeam={footballMatch.awayTeam}
+        />
+      ) : null}
 
       <Link className="card-overlay-link" to={`/matches/${footballMatch.id}`} aria-label={`Voir le détail : ${matchLabel}`} />
     </article>
