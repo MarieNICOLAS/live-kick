@@ -1,4 +1,5 @@
-import { CalendarClock, MapPin } from 'lucide-react'
+import { useState } from 'react'
+import { Brain, CalendarClock, ChevronDown, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { FootballMatch, Prediction } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
@@ -16,6 +17,7 @@ type MatchCardProps = {
 }
 
 export function MatchCard({ footballMatch, prediction, venueLabel }: MatchCardProps) {
+  const [isPredictionOpen, setIsPredictionOpen] = useState(false)
   const matchLabel = `${getTeamDisplayName(footballMatch.homeTeam)} contre ${getTeamDisplayName(footballMatch.awayTeam)}`
   const matchContext = formatMatchContext(footballMatch.groupCode, footballMatch.phaseType, footballMatch.phase)
   const groupLinkTarget =
@@ -58,11 +60,32 @@ export function MatchCard({ footballMatch, prediction, venueLabel }: MatchCardPr
       </div>
 
       {prediction ? (
-        <PredictionSummary
-          prediction={prediction}
-          homeTeam={footballMatch.homeTeam}
-          awayTeam={footballMatch.awayTeam}
-        />
+        <div className="match-card__prediction">
+          <button
+            className="match-card__prediction-toggle"
+            type="button"
+            aria-expanded={isPredictionOpen}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              setIsPredictionOpen((currentValue) => !currentValue)
+            }}
+          >
+            <span>
+              <Brain size={16} aria-hidden="true" />
+              Prédiction IA
+            </span>
+            <ChevronDown className={isPredictionOpen ? 'open' : undefined} size={18} aria-hidden="true" />
+          </button>
+
+          {isPredictionOpen ? (
+            <PredictionSummary
+              prediction={prediction}
+              homeTeam={footballMatch.homeTeam}
+              awayTeam={footballMatch.awayTeam}
+            />
+          ) : null}
+        </div>
       ) : null}
 
       <Link className="card-overlay-link" to={`/matches/${footballMatch.id}`} aria-label={`Voir le détail : ${matchLabel}`} />

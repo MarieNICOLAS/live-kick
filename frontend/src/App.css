@@ -588,7 +588,8 @@
 
 .match-card .favorite-button,
 .inline-card-link,
-.match-reminder {
+.match-reminder,
+.match-card__prediction {
   position: relative;
   z-index: 3;
 }
@@ -605,6 +606,51 @@
   align-items: center;
   display: inline-flex;
   gap: 6px;
+}
+
+.match-card__prediction {
+  display: grid;
+  gap: 10px;
+}
+
+.match-card__prediction-toggle {
+  align-items: center;
+  background: rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.22);
+  border-radius: 8px;
+  color: var(--lk-accent);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  justify-content: space-between;
+  min-height: 40px;
+  padding: 0 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.match-card__prediction-toggle span {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.match-card__prediction-toggle svg {
+  flex: 0 0 auto;
+  transition: transform 160ms ease;
+}
+
+.match-card__prediction-toggle svg.open {
+  transform: rotate(180deg);
+}
+
+.match-card__prediction-toggle:hover,
+.match-card__prediction-toggle:focus-visible {
+  background: rgba(0, 212, 255, 0.13);
+  border-color: rgba(0, 212, 255, 0.42);
+  outline: none;
 }
 
 .scoreboard {
@@ -1169,6 +1215,118 @@
 
 .standing-table--overall table {
   min-width: 860px;
+}
+
+.standing-table--accordion {
+  display: grid;
+}
+
+.standing-table--accordion .standing-table__header {
+  border-bottom: 1px solid var(--lk-border);
+}
+
+.standing-accordion {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.standing-accordion__item {
+  background: rgba(7, 17, 31, 0.22);
+  border: 1px solid var(--lk-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+:root[data-theme='light'] .standing-accordion__item {
+  background: var(--lk-surface);
+}
+
+.standing-accordion__toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--lk-text-primary);
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 62px;
+  padding: 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.standing-accordion__toggle:hover,
+.standing-accordion__toggle:focus-visible {
+  background: rgba(0, 212, 255, 0.08);
+  outline: none;
+}
+
+.standing-accordion__rank,
+.standing-accordion__team {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.standing-accordion__rank {
+  flex-wrap: wrap;
+}
+
+.standing-accordion__team {
+  justify-self: end;
+  text-align: right;
+}
+
+.standing-accordion__team strong {
+  overflow-wrap: anywhere;
+}
+
+.standing-accordion__icon {
+  color: var(--lk-text-muted);
+  transition: transform 160ms ease;
+}
+
+.standing-accordion__item.open .standing-accordion__icon {
+  color: var(--lk-accent);
+  transform: rotate(180deg);
+}
+
+.standing-accordion__stats {
+  border-top: 1px solid var(--lk-border);
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 2px 12px 12px;
+}
+
+.standing-accordion__stats div {
+  align-items: center;
+  border-bottom: 1px solid rgba(143, 161, 179, 0.16);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 34px;
+}
+
+.standing-accordion__stats div:last-child {
+  border-bottom: 0;
+}
+
+.standing-accordion__stats dt {
+  color: var(--lk-text-muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.standing-accordion__stats dd {
+  color: var(--lk-text-primary);
+  font-size: 14px;
+  font-weight: 800;
+  margin: 0;
 }
 
 .standing-table th,

@@ -263,7 +263,7 @@ export function HomePage() {
             </div>
             <Link to="/groups">Voir les groupes</Link>
           </div>
-          {firstGroup ? <GroupStandingTable group={firstGroup} /> : null}
+          {firstGroup ? <GroupStandingTable group={firstGroup} variant="accordion" /> : null}
         </div>
       </section>
 
