@@ -14,7 +14,7 @@ import { getStadiums } from '../../services/stadiumService'
 import { getTeamById, getTeamStatistics } from '../../services/teamService'
 import type { FootballMatch, Player, Team, TeamStatistics } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
-import { getMatchTimestamp } from '../../utils/formatters'
+import { formatPlayerPosition, getMatchTimestamp } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 function sortByRecentMatchDate(first: FootballMatch, second: FootballMatch) {
@@ -23,17 +23,6 @@ function sortByRecentMatchDate(first: FootballMatch, second: FootballMatch) {
 
 function isTeamMatch(footballMatch: FootballMatch, teamId: number) {
   return footballMatch.homeTeam.id === teamId || footballMatch.awayTeam.id === teamId
-}
-
-function positionLabel(position: string) {
-  const labels: Record<string, string> = {
-    GK: 'Gardien',
-    DF: 'Défenseur',
-    MF: 'Milieu',
-    FW: 'Attaquant',
-  }
-
-  return labels[position] ?? position
 }
 
 function formatBirthDate(value: string | null) {
@@ -155,7 +144,7 @@ export function PlayerDetailPage() {
               {player.firstName} {player.lastName}
             </h1>
             <p>
-              {positionLabel(player.position)} · N° {player.shirtNumber ?? '-'} · {player.nationality ?? '-'}
+              {formatPlayerPosition(player.position)} · N° {player.shirtNumber ?? '-'} · {player.nationality ?? '-'}
             </p>
           </div>
         </div>
@@ -171,7 +160,7 @@ export function PlayerDetailPage() {
           <dl className="metric-grid">
             <div>
               <dt>Poste</dt>
-              <dd>{positionLabel(player.position)}</dd>
+              <dd>{formatPlayerPosition(player.position)}</dd>
             </div>
             <div>
               <dt>Numéro</dt>
@@ -224,7 +213,7 @@ export function PlayerDetailPage() {
                   <strong>
                     {teammate.firstName} {teammate.lastName}
                   </strong>
-                  <em>{positionLabel(teammate.position)}</em>
+                  <em>{formatPlayerPosition(teammate.position)}</em>
                 </Link>
               ))}
             </div>

@@ -17,7 +17,7 @@ import { getFootballMatches } from '../../services/matchService'
 import { getKnownMatchPredictions, getMatchPrediction } from '../../services/predictionService'
 import { getStadiums } from '../../services/stadiumService'
 import type { CompetitionGroup, FootballMatch, Prediction } from '../../types/football'
-import { formatMatchday, getMatchTimestamp } from '../../utils/formatters'
+import { formatMatchContext, formatMatchday, getMatchTimestamp } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
@@ -204,11 +204,11 @@ export function HomePage() {
         <Link className="featured-match featured-match--link" to={`/matches/${featuredMatch.id}`} aria-label="Voir le détail du match principal">
           <div className="featured-match__top">
             <StatusBadge status={featuredMatch.status} minute={featuredMatch.currentMinute} />
-            <span>Groupe {featuredMatch.groupCode ?? '-'}</span>
+            <span>{formatMatchContext(featuredMatch.groupCode, featuredMatch.phaseType, featuredMatch.phase)}</span>
           </div>
           <Scoreboard footballMatch={featuredMatch} compact />
           <div className="featured-match__meta">
-            <span>{formatMatchday(featuredMatch.matchday)}</span>
+            <span>{formatMatchday(featuredMatch.matchday, featuredMatch.phaseType, featuredMatch.phase)}</span>
             <span>{getStadiumLabel(stadiumLabels, featuredMatch.stadiumId)}</span>
           </div>
           <PredictionSummary

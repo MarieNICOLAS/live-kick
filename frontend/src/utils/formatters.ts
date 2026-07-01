@@ -29,6 +29,13 @@ const phaseLabels: Record<string, string> = {
   FINAL: 'Finale',
 }
 
+const playerPositionLabels: Record<string, string> = {
+  GK: 'Gardien',
+  DF: 'Défenseur',
+  MF: 'Milieu',
+  FW: 'Attaquant',
+}
+
 const stadiumTimeZones: Record<number, string> = {
   1: 'America/Mexico_City',
   2: 'America/Mexico_City',
@@ -61,13 +68,58 @@ export function formatPhase(value: string | null | undefined) {
     return 'Phase à confirmer'
   }
 
-  const normalizedKey = value.trim().replaceAll('-', '_').replaceAll(' ', '_').toUpperCase()
+  const normalizedKey = normalizePhaseKey(value)
 
   return phaseLabels[normalizedKey] ?? value.replaceAll('_', ' ').toLowerCase()
 }
 
-export function formatMatchday(matchday: number | null) {
-  return matchday ? `Journée ${matchday}` : 'Journée à confirmer'
+export function isGroupPhase(value: string | null | undefined) {
+  const normalizedPhase = normalizePhaseKey(value)
+
+  return normalizedPhase === 'GROUP' || normalizedPhase === 'GROUP_STAGE'
+}
+
+export function formatMatchContext(
+  groupCode: string | null | undefined,
+  phaseType?: string | null,
+  phase?: string | null,
+) {
+  const phaseTypeValue = phaseType ?? phase
+  const phaseLabelValue = phase ?? phaseType
+
+  if (groupCode && isGroupPhase(phaseTypeValue)) {
+    return `Groupe ${groupCode}`
+  }
+
+  const normalizedGroupCode = normalizePhaseKey(groupCode)
+
+  if (normalizedGroupCode && phaseLabels[normalizedGroupCode]) {
+    return phaseLabels[normalizedGroupCode]
+  }
+
+  return formatPhase(phaseLabelValue)
+}
+
+export function formatMatchday(matchday: number | null, phaseType?: string | null, phase?: string | null) {
+  if (isGroupPhase(phaseType ?? phase)) {
+    return matchday != null && matchday >= 1 && matchday <= 3 ? `Journée ${matchday}` : 'Phase de groupes'
+  }
+
+  return formatPhase(phaseType ?? phase)
+}
+
+export function formatPlayerPosition(position: string | null | undefined) {
+  if (!position) {
+    return '-'
+  }
+
+  const normalizedPosition = position.trim().toUpperCase()
+
+  return playerPositionLabels[normalizedPosition] ?? position
+}
+
+function normalizePhaseKey(value: string | null | undefined) {
+  return value?.trim().replaceAll('-', '_').replaceAll(' ', '_').toUpperCase() ?? ''
 }
 
 const parisTimeZone = 'Europe/Paris'

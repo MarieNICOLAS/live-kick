@@ -1,7 +1,11 @@
 package com.livekick.service.ai;
 
 import com.livekick.dto.ai.PredictionDto;
+import com.livekick.dto.football.CompetitionGroupDto;
 import com.livekick.dto.football.FootballMatchDto;
+import com.livekick.dto.football.GroupStandingDto;
+import com.livekick.dto.football.TeamFormMatchDto;
+import com.livekick.dto.football.TeamStatisticsDto;
 import com.livekick.dto.football.TeamSummaryDto;
 import com.livekick.exception.BadRequestException;
 import com.livekick.exception.ExternalServiceException;
@@ -9,6 +13,7 @@ import com.livekick.integration.ai.AiPredictionClient;
 import com.livekick.integration.ai.AiPredictionRequest;
 import com.livekick.repository.PredictionRepository;
 import com.livekick.service.football.FootballDataService;
+import com.livekick.service.football.TeamStatisticsService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -29,11 +34,13 @@ class PredictionServiceTests {
 
     private final PredictionRepository predictionRepository = mock(PredictionRepository.class);
     private final FootballDataService footballDataService = mock(FootballDataService.class);
+    private final TeamStatisticsService teamStatisticsService = mock(TeamStatisticsService.class);
     private final AiPredictionClient aiPredictionClient = mock(AiPredictionClient.class);
 
     private final PredictionService service = new PredictionService(
             predictionRepository,
             footballDataService,
+            teamStatisticsService,
             aiPredictionClient
     );
 
@@ -79,7 +86,7 @@ class PredictionServiceTests {
         when(predictionRepository.findLatestByMatchId(match.id())).thenReturn(Optional.empty());
         when(footballDataService.getMatch(match.id())).thenReturn(match);
         when(aiPredictionClient.predict(any(AiPredictionRequest.class))).thenReturn(fallbackPrediction);
-        when(predictionRepository.save(any(PredictionDto.class))).thenAnswer(invocation -> prediction(30L, invocation.getArgument(0, PredictionDto.class).modelName()));
+        when(predictionRepository.save(any(PredictionDto.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         PredictionDto result = service.getPrediction(match.id());
 
@@ -95,8 +102,11 @@ class PredictionServiceTests {
 
         when(predictionRepository.findLatestByMatchId(match.id())).thenReturn(Optional.empty());
         when(footballDataService.getMatch(match.id())).thenReturn(match);
+        when(teamStatisticsService.getTeamStatistics(1L)).thenReturn(teamStatistics(1L, "France", 67.0, 7, 3, 1.8, 0.9));
+        when(teamStatisticsService.getTeamStatistics(2L)).thenReturn(teamStatistics(2L, "Brazil", 33.0, 4, 0, 1.1, 1.2));
+        when(footballDataService.getGroup("A")).thenReturn(groupWithStandings());
         when(aiPredictionClient.predict(any(AiPredictionRequest.class))).thenThrow(new ExternalServiceException("AI down"));
-        when(predictionRepository.save(any(PredictionDto.class))).thenAnswer(invocation -> prediction(30L, invocation.getArgument(0, PredictionDto.class).modelName()));
+        when(predictionRepository.save(any(PredictionDto.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         PredictionDto result = service.getPrediction(match.id());
 
@@ -104,7 +114,28 @@ class PredictionServiceTests {
         assertThat(result.homeWinProbability()).isGreaterThan(0.0);
         assertThat(result.drawProbability()).isGreaterThan(0.0);
         assertThat(result.awayWinProbability()).isGreaterThan(0.0);
+        assertThat(result.explanation()).contains("SQLite");
         verify(predictionRepository).save(any(PredictionDto.class));
+    }
+
+    @Test
+    void localFallbackUsesDatabaseStatisticsAndStandings() {
+        FootballMatchDto match = matchWithTeams();
+
+        when(predictionRepository.findLatestByMatchId(match.id())).thenReturn(Optional.empty());
+        when(footballDataService.getMatch(match.id())).thenReturn(match);
+        when(teamStatisticsService.getTeamStatistics(1L)).thenReturn(teamStatistics(1L, "France", 80.0, 9, 6, 2.4, 0.6));
+        when(teamStatisticsService.getTeamStatistics(2L)).thenReturn(teamStatistics(2L, "Brazil", 20.0, 3, -4, 0.9, 1.8));
+        when(footballDataService.getGroup("A")).thenReturn(groupWithStandings());
+        when(aiPredictionClient.predict(any(AiPredictionRequest.class))).thenThrow(new ExternalServiceException("AI down"));
+        when(predictionRepository.save(any(PredictionDto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PredictionDto result = service.getPrediction(match.id());
+
+        assertThat(result.modelName()).isEqualTo("LiveKick heuristique locale");
+        assertThat(result.homeWinProbability()).isGreaterThan(result.awayWinProbability());
+        assertThat(result.confidenceScore()).isGreaterThanOrEqualTo(65.0);
+        assertThat(result.explanation()).contains("classements de groupe", "forme recente");
     }
 
     @Test
@@ -243,6 +274,49 @@ class PredictionServiceTests {
                 modelName,
                 "France has a slight edge.",
                 Instant.parse("2026-06-20T12:00:00Z")
+        );
+    }
+
+    private TeamStatisticsDto teamStatistics(
+            Long teamId,
+            String teamName,
+            Double winRate,
+            Integer goalsFor,
+            Integer goalDifference,
+            Double averageGoalsFor,
+            Double averageGoalsAgainst
+    ) {
+        return new TeamStatisticsDto(
+                teamId,
+                new TeamSummaryDto(teamId, teamName, teamId == 1L ? "FRA" : "BRA", null),
+                3,
+                2,
+                0,
+                1,
+                goalsFor,
+                goalsFor - goalDifference,
+                goalDifference,
+                winRate,
+                averageGoalsFor,
+                averageGoalsAgainst,
+                List.of(
+                        new TeamFormMatchDto(1L, LocalDateTime.of(2026, 6, 1, 18, 0), null, true, 2, 1, "WIN"),
+                        new TeamFormMatchDto(2L, LocalDateTime.of(2026, 6, 5, 18, 0), null, false, 1, 1, "DRAW")
+                )
+        );
+    }
+
+    private CompetitionGroupDto groupWithStandings() {
+        TeamSummaryDto france = new TeamSummaryDto(1L, "France", "FRA", "/flags/fra.png");
+        TeamSummaryDto brazil = new TeamSummaryDto(2L, "Brazil", "BRA", "/flags/bra.png");
+
+        return new CompetitionGroupDto(
+                "A",
+                1,
+                List.of(
+                        new GroupStandingDto(france, 3, 3, 0, 0, 9, 8, 2, 6),
+                        new GroupStandingDto(brazil, 3, 1, 0, 2, 3, 3, 6, -3)
+                )
         );
     }
 }

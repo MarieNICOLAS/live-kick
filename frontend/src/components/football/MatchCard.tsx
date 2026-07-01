@@ -2,7 +2,7 @@ import { CalendarClock, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { FootballMatch, Prediction } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
-import { formatMatchDateTime, formatPhase } from '../../utils/formatters'
+import { formatMatchContext, formatMatchDateTime, isGroupPhase } from '../../utils/formatters'
 import { FavoriteButton } from './FavoriteButton'
 import { MatchReminderButton } from './MatchReminderButton'
 import { PredictionSummary } from './PredictionSummary'
@@ -17,18 +17,23 @@ type MatchCardProps = {
 
 export function MatchCard({ footballMatch, prediction, venueLabel }: MatchCardProps) {
   const matchLabel = `${getTeamDisplayName(footballMatch.homeTeam)} contre ${getTeamDisplayName(footballMatch.awayTeam)}`
+  const matchContext = formatMatchContext(footballMatch.groupCode, footballMatch.phaseType, footballMatch.phase)
+  const groupLinkTarget =
+    footballMatch.groupCode && isGroupPhase(footballMatch.phaseType ?? footballMatch.phase)
+      ? `/groups/${footballMatch.groupCode}`
+      : null
 
   return (
     <article className="match-card">
       <div className="match-card__meta">
         <StatusBadge status={footballMatch.status} minute={footballMatch.currentMinute} />
-        {footballMatch.groupCode ? (
-          <Link className="inline-card-link" to={`/groups/${footballMatch.groupCode}`}>
-            Groupe {footballMatch.groupCode}
+        {groupLinkTarget ? (
+          <Link className="inline-card-link" to={groupLinkTarget}>
+            {matchContext}
           </Link>
         ) : (
           <Link className="inline-card-link" to={`/calendar?phase=${footballMatch.phaseType}`}>
-            {formatPhase(footballMatch.phase)}
+            {matchContext}
           </Link>
         )}
         <div className="match-card__actions">
