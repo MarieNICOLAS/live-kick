@@ -3,13 +3,13 @@ import { useSearchParams } from 'react-router-dom'
 import { MatchCard } from '../../components/football/MatchCard'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { Spinner } from '../../components/ui/Spinner'
-import { demoFootballMatches } from '../../fixtures/liveKickDemoData'
+import { demoFootballMatches, demoStadiums } from '../../fixtures/liveKickDemoData'
 import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import { getFootballMatches } from '../../services/matchService'
 import { getKnownMatchPredictions } from '../../services/predictionService'
 import { getStadiums } from '../../services/stadiumService'
-import type { FootballMatch, MatchStatus, Prediction } from '../../types/football'
-import { getMatchTimestamp } from '../../utils/formatters'
+import type { FootballMatch, MatchStatus, Prediction, Stadium } from '../../types/football'
+import { formatDateKey, getMatchDateKey, getMatchTimestamp } from '../../utils/formatters'
 import { buildStadiumLabelMap, getStadiumLabel, type StadiumLabelMap } from '../../utils/stadiumLabels'
 
 type CalendarFilter = MatchStatus | 'ALL' | 'DATES_ONLY'
@@ -23,11 +23,19 @@ const statusFilters: Array<{ label: string; value: CalendarFilter }> = [
 ]
 
 function getInitialStatusFilter(value: string | null): CalendarFilter {
+  if (value === 'DATES_ONLY') {
+    return value
+  }
+
   if (value === 'LIVE' || value === 'HALF_TIME' || value === 'SCHEDULED' || value === 'POSTPONED' || value === 'FINISHED') {
     return value
   }
 
   return 'ALL'
+}
+
+function getInitialOptionFilter(value: string | null) {
+  return value?.trim() || 'ALL'
 }
 
 function sortByMatchDate(first: FootballMatch, second: FootballMatch) {
@@ -88,15 +96,24 @@ function shouldShowMatchForFilter(footballMatch: FootballMatch, statusFilter: Ca
 }
 
 export function CalendarPage() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const phaseFilter = searchParams.get('phase')
   const groupFilter = searchParams.get('group')
   const [footballMatches, setFootballMatches] = useState<FootballMatch[]>([])
   const [predictionsByMatchId, setPredictionsByMatchId] = useState<Record<number, Prediction>>({})
+  const [stadiums, setStadiums] = useState<Stadium[]>([])
   const [stadiumLabels, setStadiumLabels] = useState<StadiumLabelMap>({})
   const [statusFilter, setStatusFilter] = useState<CalendarFilter>(() => getInitialStatusFilter(searchParams.get('status')))
+  const [stadiumFilter, setStadiumFilter] = useState(() => getInitialOptionFilter(searchParams.get('stadium')))
+  const [dateFilter, setDateFilter] = useState(() => getInitialOptionFilter(searchParams.get('date')))
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setStatusFilter(getInitialStatusFilter(searchParams.get('status')))
+    setStadiumFilter(getInitialOptionFilter(searchParams.get('stadium')))
+    setDateFilter(getInitialOptionFilter(searchParams.get('date')))
+  }, [searchParams])
 
   useEffect(() => {
     let isMounted = true
@@ -113,6 +130,7 @@ export function CalendarPage() {
         }
 
         setFootballMatches(matchesResponse)
+        setStadiums(stadiumsResponse)
         setStadiumLabels(buildStadiumLabelMap(stadiumsResponse))
         setError(null)
 
@@ -133,7 +151,8 @@ export function CalendarPage() {
 
         setFootballMatches(demoFootballMatches)
         setPredictionsByMatchId({})
-        setStadiumLabels({})
+        setStadiums(demoStadiums)
+        setStadiumLabels(buildStadiumLabelMap(demoStadiums))
         setError("L'API du serveur est indisponible, affichage des données de démonstration.")
       } finally {
         if (isMounted) {
@@ -157,6 +176,7 @@ export function CalendarPage() {
       ])
 
       setFootballMatches(matchesResponse)
+      setStadiums(stadiumsResponse)
       setStadiumLabels(buildStadiumLabelMap(stadiumsResponse))
       setError(null)
 
@@ -173,14 +193,53 @@ export function CalendarPage() {
 
   useAutoRefresh(refreshMatches, { enabled: !isLoading, intervalMs: 30_000 })
 
+  const updateQueryFilter = useCallback(
+    (key: string, value: string) => {
+      const nextParams = new URLSearchParams(searchParams)
+
+      if (value === 'ALL') {
+        nextParams.delete(key)
+      } else {
+        nextParams.set(key, value)
+      }
+
+      setSearchParams(nextParams, { replace: true })
+    },
+    [searchParams, setSearchParams],
+  )
+
+  const dateOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          footballMatches
+            .map((footballMatch) => getMatchDateKey(footballMatch.matchDate, footballMatch.stadiumId))
+            .filter(Boolean),
+        ),
+      ).sort(),
+    [footballMatches],
+  )
+
+  const sortedStadiums = useMemo(
+    () =>
+      [...stadiums].sort((first, second) =>
+        getStadiumLabel(stadiumLabels, first.id).localeCompare(getStadiumLabel(stadiumLabels, second.id), 'fr'),
+      ),
+    [stadiumLabels, stadiums],
+  )
+
+  const activeStadiumLabel = stadiumFilter === 'ALL' ? null : getStadiumLabel(stadiumLabels, Number(stadiumFilter))
+
   const filteredMatches = useMemo(
     () =>
       [...footballMatches]
         .filter((footballMatch) => shouldShowMatchForFilter(footballMatch, statusFilter))
         .filter((footballMatch) => !groupFilter || footballMatch.groupCode === groupFilter.toUpperCase())
         .filter((footballMatch) => !phaseFilter || footballMatch.phase === phaseFilter || footballMatch.phaseType === phaseFilter)
+        .filter((footballMatch) => stadiumFilter === 'ALL' || String(footballMatch.stadiumId) === stadiumFilter)
+        .filter((footballMatch) => dateFilter === 'ALL' || getMatchDateKey(footballMatch.matchDate, footballMatch.stadiumId) === dateFilter)
         .sort(sortByCalendarPriority),
-    [footballMatches, groupFilter, phaseFilter, statusFilter],
+    [dateFilter, footballMatches, groupFilter, phaseFilter, stadiumFilter, statusFilter],
   )
 
   if (isLoading) {
@@ -207,7 +266,7 @@ export function CalendarPage() {
             className={statusFilter === filter.value ? 'segmented-control__item active' : 'segmented-control__item'}
             key={filter.value}
             type="button"
-            onClick={() => setStatusFilter(filter.value)}
+            onClick={() => updateQueryFilter('status', filter.value)}
           >
             {filter.label}
           </button>
@@ -216,6 +275,38 @@ export function CalendarPage() {
 
       {phaseFilter ? <p className="data-warning">Filtre actif : {phaseFilter}</p> : null}
       {groupFilter ? <p className="data-warning">Groupe actif : {groupFilter.toUpperCase()}</p> : null}
+      {activeStadiumLabel ? <p className="data-warning">Stade actif : {activeStadiumLabel}</p> : null}
+
+      <section className="filter-panel" aria-label="Filtrer le calendrier">
+        <label className="filter-field">
+          <span>Stade</span>
+          <select value={stadiumFilter} onChange={(event) => updateQueryFilter('stadium', event.target.value)}>
+            <option value="ALL">Tous les stades</option>
+            {sortedStadiums.map((stadium) => (
+              <option value={stadium.id} key={stadium.id}>
+                {getStadiumLabel(stadiumLabels, stadium.id)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="filter-field">
+          <span>Date</span>
+          <select value={dateFilter} onChange={(event) => updateQueryFilter('date', event.target.value)}>
+            <option value="ALL">Toutes les dates</option>
+            {dateOptions.map((date) => (
+              <option value={date} key={date}>
+                {formatDateKey(date)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="filter-panel__summary">
+          <strong>{filteredMatches.length}</strong>
+          <span>matchs visibles</span>
+        </div>
+      </section>
 
       {filteredMatches.length === 0 ? (
         <ErrorState title="Aucun match" message="Aucune rencontre ne correspond a ce filtre." />

@@ -1,4 +1,4 @@
-import { Activity, BarChart3, Bell, CalendarDays, Home, Moon, Star, Sun, Trophy } from 'lucide-react'
+import { Activity, BarChart3, Bell, CalendarDays, Home, MapPin, Moon, Star, Sun, Trophy } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useTheme } from '../../app/themeContext'
 import iconLogo from '../../assets/logos/simply-color-logo.png'
@@ -8,6 +8,7 @@ const mainLinks = [
   { to: '/', label: 'Accueil' },
   { to: '/calendar', label: 'Calendrier' },
   { to: '/groups', label: 'Groupes' },
+  { to: '/stadiums', label: 'Stades' },
   { to: '/teams', label: 'Equipes' },
   { to: '/stats', label: 'Statistiques' },
   { to: '/favorites', label: 'Favoris' },
@@ -18,7 +19,7 @@ const mobileLinks = [
   { to: '/live', label: 'Direct', Icon: Activity },
   { to: '/calendar', label: 'Matchs', Icon: CalendarDays },
   { to: '/groups', label: 'Groupes', Icon: Trophy },
-  { to: '/favorites', label: 'Favoris', Icon: Star },
+  { to: '/stats', label: 'Stats', Icon: BarChart3 },
 ]
 
 export function Header() {
@@ -35,8 +36,12 @@ export function Header() {
         </NavLink>
 
         <div className="header-tools">
-          <NavLink className="icon-button" to="/stats" aria-label="Statistiques">
-            <BarChart3 size={20} aria-hidden="true" />
+          <NavLink className="icon-button" to="/favorites" aria-label="Favoris">
+            <Star size={20} aria-hidden="true" />
+          </NavLink>
+
+          <NavLink className="icon-button" to="/stadiums" aria-label="Stades">
+            <MapPin size={20} aria-hidden="true" />
           </NavLink>
 
           <NavLink className="icon-button notification-button" to="/notifications" aria-label="Notifications">

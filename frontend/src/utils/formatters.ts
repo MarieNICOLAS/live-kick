@@ -206,6 +206,38 @@ export function getMatchTimestamp(value: string, stadiumId?: number | null) {
   return getMatchDate(value, stadiumId).getTime()
 }
 
+export function getMatchDateKey(value: string, stadiumId?: number | null) {
+  const date = getMatchDate(value, stadiumId)
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: parisTimeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+
+  const year = parts.find((part) => part.type === 'year')?.value
+  const month = parts.find((part) => part.type === 'month')?.value
+  const day = parts.find((part) => part.type === 'day')?.value
+
+  return year && month && day ? `${year}-${month}-${day}` : ''
+}
+
+export function formatDateKey(value: string) {
+  if (!value) {
+    return 'Date à confirmer'
+  }
+
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${value}T12:00:00`))
+}
+
+export function formatMatchDate(value: string, stadiumId?: number | null) {
+  return formatDateKey(getMatchDateKey(value, stadiumId))
+}
+
 export function formatMatchDateTime(value: string, stadiumId?: number | null) {
   const date = getMatchDate(value, stadiumId)
   const datePart = new Intl.DateTimeFormat('fr-FR', {

@@ -1,4 +1,4 @@
-import type { CompetitionGroup, FootballMatch, Prediction, Team } from '../types/football'
+import type { CompetitionGroup, FootballMatch, Prediction, Stadium, Team } from '../types/football'
 
 export const demoTeams: Team[] = [
   { id: 1, name: 'France', fifaCode: 'FRA', country: 'France', flagUrl: null, groupCode: 'A' },
@@ -52,6 +52,36 @@ export const demoFootballMatches: FootballMatch[] = [
     homeTeam: demoTeams[2],
     awayTeam: demoTeams[0],
     stadiumId: 3,
+  },
+]
+
+export const demoStadiums: Stadium[] = [
+  {
+    id: 1,
+    name: 'Estadio Azteca',
+    fifaName: 'Estadio Ciudad de Mexico',
+    city: 'Mexico City',
+    country: 'Mexique',
+    capacity: 87523,
+    region: 'Mexico',
+  },
+  {
+    id: 2,
+    name: 'BMO Field',
+    fifaName: 'Toronto Stadium',
+    city: 'Toronto',
+    country: 'Canada',
+    capacity: 30000,
+    region: 'Canada Est',
+  },
+  {
+    id: 3,
+    name: 'SoFi Stadium',
+    fifaName: 'Los Angeles Stadium',
+    city: 'Los Angeles',
+    country: 'États-Unis',
+    capacity: 70240,
+    region: 'USA Ouest',
   },
 ]
 
