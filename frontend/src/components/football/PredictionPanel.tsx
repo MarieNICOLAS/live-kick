@@ -1,8 +1,8 @@
 import { BrainCircuit } from 'lucide-react'
 import type { Prediction, TeamSummary } from '../../types/football'
 import { getTeamDisplayName } from '../../utils/displayNames'
+import { getPredictionInsight } from '../../utils/predictionInsight'
 import { ProbabilityBar } from './ProbabilityBar'
-import { getPredictionInsight } from './PredictionSummary'
 
 type PredictionPanelProps = {
   prediction: Prediction

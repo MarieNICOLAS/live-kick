@@ -1,38 +1,38 @@
 # Docker LiveKick
 
-La configuration Docker principale est a la racine du projet :
+La configuration Docker principale est a la racine du projet:
 
 ```text
 docker-compose.yml
 ```
 
-Elle permet de lancer l'environnement local sans installer tous les services a la main.
+Elle lance les services applicatifs du MVP sans installer chaque runtime localement.
 
 ## Services disponibles
 
 | Service | Role |
 | --- | --- |
-| postgres | Base de donnees PostgreSQL |
-| redis | Cache / support futur du live |
 | backend | API Spring Boot |
 | frontend | Interface React servie par Nginx |
 | ai-service | Service analytique FastAPI |
+| sqlite_data | Volume Docker contenant `/data/livekick.db` |
 
-## Lancer seulement la base
-
-```powershell
-docker compose up -d postgres redis
-```
-
-Utile quand on veut lancer le backend et le frontend directement depuis les IDE.
-
-## Lancer toute l'application
+## Lancer l'application
 
 ```powershell
 docker compose --profile app up --build
 ```
 
-Le profil `app` lance aussi le backend, le frontend et le service IA.
+Ports exposes par defaut:
+
+| Service | URL |
+| --- | --- |
+| frontend | `http://localhost:5173` |
+| backend | `http://localhost:8080` |
+| Swagger UI | `http://localhost:8080/swagger-ui.html` |
+| ai-service | `http://localhost:8000` |
+
+Les ports et variables principales peuvent etre surchargees avec un fichier `.env` a la racine du repository.
 
 ## Arreter les conteneurs
 
@@ -40,14 +40,14 @@ Le profil `app` lance aussi le backend, le frontend et le service IA.
 docker compose down
 ```
 
-## Informations PostgreSQL par defaut
+Supprimer aussi le volume SQLite local:
 
-```text
-host: localhost
-port: 5432
-database: livekick
-user: livekick
-password: livekick
+```powershell
+docker compose down -v
 ```
 
-Ces valeurs peuvent etre surchargees avec un fichier `.env` a la racine du projet.
+## Notes
+
+- Le frontend Docker est servi par Nginx avec `infra/nginx/frontend.conf`.
+- Le backend utilise `LIVEKICK_SQLITE_PATH=/data/livekick.db` dans Docker.
+- Le service IA peut fonctionner avec son fallback si LM Studio n'est pas disponible depuis le conteneur.

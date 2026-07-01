@@ -1,79 +1,67 @@
 # Service IA LiveKick
 
-Ce dossier contient le service analytique dédié aux prédictions de match.
+Service FastAPI dedie aux predictions de match LiveKick 2026.
 
-Il est séparé du backend pour garder une architecture claire :
+Architecture cible:
 
 ```text
-frontend -> backend -> ai-service
+frontend -> backend -> ai-service -> LM Studio
 ```
 
-Le frontend ne contacte jamais directement ce service. Le backend prépare les données du match, appelle le service IA, puis renvoie une réponse propre au frontend.
+Le frontend ne contacte jamais directement ce service. Le backend prepare le contexte de match, appelle l'IA, controle la reponse, persiste la prediction et renvoie un DTO propre au frontend.
 
-## Role du service
+## Stack
 
-- Recevoir un contexte de match.
-- Calculer ou simuler une prediction.
-- Retourner des probabilités, un score prédit et une explication.
+- Python 3.12.
+- FastAPI.
+- Pydantic.
+- Requests.
+- LM Studio local, optionnel en developpement.
 
+## Structure
+
+```text
+app/
+  api/
+    dependencies.py
+    routes/Routes.py
+  config/
+    system_prompt.txt
+  models/
+    LMStudio.py
+  services/
+    PredictionService.py
+  utils/
+    BaseModel.py
+    PredictionManager.py
+    lifespanManager.py
+  main.py
+```
 
 ## Installation
 
-### Environnement
 ```powershell
-cd ai-service # Pas à la racine du projet
-
-python3 -m venv .venv # Environnement virtuel
-
-.\.venv\Scripts\Activate # Source environnement virtuel
-pip install -r requirements.txt # Installation des dépendances requises
-
-curl http://127.0.0.1:8000/ # Essai
-
-# Doit répondre:
-# {"status":"UP","service":"LiveKick AI Service"}
-
+cd ai-service
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 ```
 
-### Installation de LMStudio
-
-Suivre le tutoriel d'installation de [LMStudio](https://lmstudio.ai/).  
-Une fois l'installation terminé:
- - Télécharger le model suivant: "google/gemma-4-e2b" (Il s'agit du model utilisé par défaut du projet)
- - Activer le serveur local, qui doit tourner sur le port 1234.  
- - Désactivé également l'authentification.
-
-L'application devrait tourner sans problème.
-
-## Lancer en local
+## Lancement
 
 ```powershell
-fastapi dev
+python -m fastapi dev app/main.py
 ```
 
-URL locale :
+URL locale: `http://localhost:8000`.
 
-```text
-http://localhost:8000
+Verification:
+
+```powershell
+curl http://127.0.0.1:8000/health
 ```
 
-## Endpoints
-
-```text
-GET /health
-GET /model_status (WIP)
-POST /predict
-```
-
-# Details Endpoints
-
-## GET `/health`
-
-Vérifie que le service est opérationnel.
-
-**Entrée :** aucune
-
-**Sortie :**
+Reponse attendue:
 
 ```json
 {
@@ -81,42 +69,30 @@ Vérifie que le service est opérationnel.
 }
 ```
 
----
+## LM Studio
 
-## GET `/model-status`
+Pour utiliser le modele local:
 
-Retourne l'état du modèle IA. _(Non implémenté — placeholder)_
+1. Installer LM Studio.
+2. Telecharger le modele `google/gemma-4-e2b`.
+3. Lancer le serveur local OpenAI-compatible sur `http://127.0.0.1:1234`.
+4. Desactiver l'authentification locale.
 
-**Entrée :** aucune
+Si LM Studio est indisponible ou retourne un format invalide, `PredictionService` renvoie automatiquement une prediction de fallback explicite.
 
-**Sortie :**
+## Endpoints
 
-```json
-{
-  "status": "Model status endpoint not yet implemented."
-}
+```text
+GET /
+GET /health
+GET /model-status
+GET /model_status
+POST /predict
 ```
 
----
+### POST `/predict`
 
-## POST `/predict`
-
-Demande une prédiction pour un match de football.
-
-### Entrée (JSON body)
-
-| Champ | Type | Obligatoire | Description |
-|---|---|---|---|
-| `match_id` | `int` | ✅ | Identifiant unique du match |
-| `home_team` | `TeamContext` | ✅ | Équipe à domicile |
-| `home_team.name` | `string` (min 1 car.) | ✅ | Nom complet de l'équipe |
-| `home_team.fifa_code` | `string` (2–3 car.) | ✅ | Code FIFA de l'équipe (ex. `FRA`, `BRZ`) |
-| `away_team` | `TeamContext` | ✅ | Équipe à l'extérieur |
-| `away_team.name` | `string` (min 1 car.) | ✅ | Nom complet de l'équipe |
-| `away_team.fifa_code` | `string` (2–3 car.) | ✅ | Code FIFA de l'équipe |
-| `stadium` | `string` (min 1 car.) | ✅ | Nom du stade |
-
-**Exemple de requête :**
+Exemple de requete:
 
 ```json
 {
@@ -127,28 +103,13 @@ Demande une prédiction pour un match de football.
   },
   "away_team": {
     "name": "Brazil",
-    "fifa_code": "BRZ"
+    "fifa_code": "BRA"
   },
-  "stadium": "Stade de France"
+  "stadium": "MetLife Stadium"
 }
 ```
 
-### Sortie (JSON)
-
-| Champ | Type | Description |
-|---|---|---|
-| `match_id` | `int` | Identifiant du match |
-| `home_win_probability` | `float` (0–100) | Probabilité de victoire à domicile (%) |
-| `draw_probability` | `float` (0–100) | Probabilité de match nul (%) |
-| `away_win_probability` | `float` (0–100) | Probabilité de victoire à l'extérieur (%) |
-| `predicted_home_score` | `int` | Score prédit pour l'équipe à domicile |
-| `predicted_away_score` | `int` | Score prédit pour l'équipe à l'extérieur |
-| `confidence_score` | `float` (0–100) | Niveau de confiance du modèle (%) |
-| `model_name` | `string` | Nom du modèle utilisé |
-| `explanation` | `string` | Explication textuelle de la prédiction |
-| `generated_at` | `datetime` (ISO 8601) | Horodatage de génération (UTC) |
-
-**Exemple de réponse :**
+Exemple de reponse:
 
 ```json
 {
@@ -165,20 +126,16 @@ Demande une prédiction pour un match de football.
 }
 ```
 
-> En cas d'indisponibilité du modèle LMStudio ou de réponse invalide, un résultat de fallback est retourné automatiquement avec une explication appropriée.
-
----
-
-## Vérification rapide
+## Verification
 
 ```powershell
 python -m compileall app
 ```
 
-## Règles simples
+## Regles IA
 
-- Garder les entrées et sorties en JSON.
-- Ne pas acceder directement a PostgreSQL depuis ce service.
-- Laisser le backend gérer la sécurité, les droits et la persistance.
-- Garder les réponses explicables pour l'utilisateur final.
-
+- Garder les entrees et sorties en JSON.
+- Ne pas acceder directement a SQLite depuis ce service.
+- Ne jamais gerer les droits, tokens utilisateur ou la persistance ici.
+- Retourner des predictions explicables pour l'utilisateur final.
+- Laisser le backend filtrer, valider et exposer la reponse finale.

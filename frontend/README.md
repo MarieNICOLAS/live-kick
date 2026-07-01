@@ -1,38 +1,39 @@
 # Frontend LiveKick
 
-Ce dossier contient l'interface utilisateur de LiveKick 2026.
+Interface React de LiveKick 2026. Elle affiche les donnees football du MVP, les etats live, les favoris locaux, les preferences utilisateur et les predictions renvoyees par le backend.
 
-Le frontend est developpe avec React, TypeScript et Vite. Il consomme uniquement l'API du backend Spring Boot.
+Le frontend consomme uniquement l'API Spring Boot. Il ne contacte jamais SQLite, le fournisseur football externe ou le service IA.
 
-## Role du frontend
+## Stack
 
-- Afficher les matchs, scores, groupes, equipes, joueurs et stades.
-- Gerer les pages publiques et les pages utilisateur.
-- Afficher les etats live recus du backend.
-- Appeler les endpoints REST du backend.
-- Afficher les predictions fournies par le backend.
+- React 19.
+- TypeScript 6.
+- Vite 8.
+- React Router 7.
+- Zustand pour les favoris, preferences et notifications locales.
+- Axios via un client HTTP centralise.
+- ESLint pour la qualite statique.
 
-Le frontend ne doit pas appeler directement PostgreSQL, le service IA ou une API football externe.
-
-## Structure actuelle
+## Structure
 
 ```text
 src/
+  app/             Router, providers et contexte theme
+  assets/          Images et logos LiveKick
+  components/      UI, layout, formulaires et composants football
+  fixtures/        Donnees de demonstration frontend
+  hooks/           Hooks de rafraichissement et rappels
+  pages/           Pages publiques et erreurs
+  services/        Acces API type via apiClient
+  stores/          Stores Zustand persistants
+  types/           Contrats TypeScript
+  utils/           Formatage, labels et calculs d'affichage
   App.tsx
   App.css
   index.css
-  services/
-    apiClient.ts
-    statusService.ts
 ```
 
-`apiClient.ts` centralise les appels HTTP avec Axios.
-
-`statusService.ts` contient le premier appel API vers :
-
-```text
-GET /api/v1/status
-```
+Les appels HTTP passent par `src/services/apiClient.ts`. Les services metier exposent ensuite des fonctions dediees: `matchService`, `teamService`, `playerService`, `groupService`, `stadiumService`, `predictionService` et `statusService`.
 
 ## Installation
 
@@ -41,38 +42,43 @@ cd frontend
 npm install
 ```
 
-## Lancer en local
+## Configuration
+
+Copier le fichier d'exemple si une configuration locale est necessaire:
 
 ```powershell
-npm run dev
+Copy-Item .env.example .env
 ```
 
-URL locale :
-
-```text
-http://localhost:5173
-```
-
-## Variables d'environnement
-
-Copier `frontend/.env.example` en `frontend/.env` si besoin.
-
-Variable principale :
+Variable disponible:
 
 ```text
 VITE_API_BASE_URL=http://localhost:8080/api/v1
 ```
 
-## Commandes utiles
+## Lancement
 
 ```powershell
-npm run build
-npm run lint
+npm run dev
 ```
 
-## Regles simples
+URL locale: `http://localhost:5173`.
 
-- Garder les types TypeScript en anglais.
-- Passer par `services/apiClient.ts` pour les appels HTTP.
-- Ne pas mettre de logique metier critique dans le frontend.
-- Respecter le style visuel LiveKick, pas le style par defaut Vite.
+Le backend doit etre disponible sur l'URL definie par `VITE_API_BASE_URL`.
+
+## Scripts
+
+```powershell
+npm run dev      # serveur Vite local
+npm run build    # typecheck TypeScript + build production
+npm run lint     # analyse ESLint
+npm run preview  # preview du build Vite
+```
+
+## Regles frontend
+
+- Garder les types et proprietes en anglais, alignes sur les DTO backend.
+- Utiliser `FootballMatch`, pas `Match`, quand le concept metier est concerne.
+- Stocker localement uniquement favoris, preferences, notifications et rappels.
+- Eviter toute logique metier critique cote navigateur.
+- Respecter la palette LiveKick et ne pas reintroduire d'asset ou de style Vite par defaut.

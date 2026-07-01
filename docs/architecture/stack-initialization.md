@@ -1,24 +1,29 @@
 # Initialisation stack LiveKick
 
-Ce document resume le socle technique initialise pour permettre aux developpeurs de commencer a coder.
+Ce document resume le socle technique MVP initialise pour permettre aux developpeurs de lancer et maintenir LiveKick.
 
 | Domaine | Choix |
 | --- | --- |
-| frontend | React + TypeScript + Vite |
-| backend | Spring Boot |
-| base de donnees | PostgreSQL |
-| migrations | Flyway |
-| securite | JWT + Spring Security |
+| frontend | React 19 + TypeScript 6 + Vite 8 |
+| backend | Spring Boot 3.5 + Java 21 |
+| base de donnees | SQLite |
+| schema | SQL initialise par Spring depuis `db/sqlite/schema.sql` |
+| securite | Spring Security + JWT cible |
 | API | REST / JSON |
-| live | WebSocket STOMP + polling cible |
-| IA | service analytique FastAPI dedie |
-| conteneurisation | Docker / Docker Compose |
+| live | WebSocket configure + polling REST de fallback |
+| IA | service FastAPI dedie avec fallback applicatif |
+| conteneurisation | Docker Compose |
 
 ## Ordre de demarrage local
 
-1. Lancer PostgreSQL et Redis : `docker compose up -d postgres redis`.
-2. Lancer le backend : `cd backend && .\mvnw.cmd spring-boot:run`.
-3. Lancer le service IA : `cd ai-service && uvicorn app.main:app --reload --port 8000`.
-4. Lancer le frontend : `cd frontend && npm run dev`.
+1. Lancer le backend: `cd backend && .\mvnw.cmd spring-boot:run`.
+2. Lancer le service IA: `cd ai-service && python -m fastapi dev app/main.py`.
+3. Lancer le frontend: `cd frontend && npm run dev`.
+
+Demarrage Docker complet:
+
+```powershell
+docker compose --profile app up --build
+```
 
 Le backend reste la source de verite metier. Le frontend consomme uniquement l'API backend.
