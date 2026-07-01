@@ -1,4 +1,4 @@
-import { Activity, BarChart3, Bell, CalendarDays, Home, Moon, Search, Star, Sun, Trophy } from 'lucide-react'
+import { Activity, BarChart3, Bell, CalendarDays, Home, Moon, Star, Sun, Trophy } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useTheme } from '../../app/themeContext'
 import iconLogo from '../../assets/logos/simply-color-logo.png'
@@ -65,12 +65,6 @@ export function Header() {
         </nav>
 
         <div className="header-tools">
-          <label className="search-box" htmlFor="global-search">
-            <Search size={21} aria-hidden="true" />
-            <input id="global-search" type="search" placeholder="Rechercher..." />
-            <kbd>/</kbd>
-          </label>
-
           <NavLink className="icon-button notification-button" to="/notifications" aria-label="Notifications">
             <Bell size={21} aria-hidden="true" />
             {unreadCount > 0 ? <span>{unreadCount}</span> : null}

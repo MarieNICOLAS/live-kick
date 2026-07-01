@@ -16,7 +16,11 @@ export function FavoriteButton({ type, targetId, label }: FavoriteButtonProps) {
     <button
       className={isFavorite ? 'favorite-button favorite-button--active' : 'favorite-button'}
       type="button"
-      onClick={() => toggleFavorite(type, targetId)}
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        toggleFavorite(type, targetId)
+      }}
       aria-pressed={isFavorite}
       aria-label={label}
     >
