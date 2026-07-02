@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown, Medal, Table2, Trophy } from 'lucide-react'
+import { ChevronDown, Lightbulb, Medal, Table2, Trophy } from 'lucide-react'
 import { GroupStandingTable } from '../../components/football/GroupStandingTable'
 import { TeamFlag } from '../../components/football/TeamFlag'
 import { ErrorState } from '../../components/ui/ErrorState'
+import { Modal } from '../../components/ui/Modal'
 import { Spinner } from '../../components/ui/Spinner'
 import { demoCompetitionGroups } from '../../fixtures/liveKickDemoData'
 import { getCompetitionGroups } from '../../services/groupService'
@@ -36,6 +37,7 @@ function getGroupRank(groups: CompetitionGroup[], standing: OverallStanding) {
 export function GroupsPage() {
   const [groups, setGroups] = useState<CompetitionGroup[]>([])
   const [groupFilter, setGroupFilter] = useState<GroupFilter>('ALL')
+  const [isGuideOpen, setIsGuideOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -185,8 +187,25 @@ export function GroupsPage() {
         </ol>
       </section>
 
+      <Modal isOpen={isGuideOpen} title="Lire le classement" onClose={() => setIsGuideOpen(false)}>
+        <dl className="standing-guide-list">
+          <div>
+            <dt>Pts</dt>
+            <dd>Plus une équipe a de points, mieux elle est classée.</dd>
+          </div>
+          <div>
+            <dt>Diff</dt>
+            <dd>Départage les équipes proches : buts marqués moins buts encaissés.</dd>
+          </div>
+          <div>
+            <dt>Qualif.</dt>
+            <dd>Les deux premiers de chaque groupe sont mis en évidence.</dd>
+          </div>
+        </dl>
+      </Modal>
+
       {groupFilter === 'ALL' && overallStandings.length > 0 ? (
-        <OverallStandingAccordion standings={overallStandings} groups={groups} />
+        <OverallStandingAccordion standings={overallStandings} groups={groups} onOpenGuide={() => setIsGuideOpen(true)} />
       ) : null}
 
       <div className="group-grid">
@@ -200,17 +219,14 @@ export function GroupsPage() {
 
 function OverallStandingAccordion({
   groups,
+  onOpenGuide,
   standings,
 }: {
   groups: CompetitionGroup[]
+  onOpenGuide: () => void
   standings: OverallStanding[]
 }) {
-  const firstStanding = standings[0]
-  const [openStandingKey, setOpenStandingKey] = useState(() => getOverallStandingKey(firstStanding))
-
-  useEffect(() => {
-    setOpenStandingKey(getOverallStandingKey(firstStanding))
-  }, [firstStanding])
+  const [openStandingKey, setOpenStandingKey] = useState('')
 
   return (
     <section className="standing-table standing-table--accordion standing-table--overall" aria-labelledby="overall-standing">
@@ -219,6 +235,14 @@ function OverallStandingAccordion({
           <h2 id="overall-standing">Classement général</h2>
           <span>Toutes les équipes, triées par points puis différence de buts</span>
         </div>
+        <button
+          className="standing-guide-button"
+          type="button"
+          onClick={onOpenGuide}
+          aria-label="Lire l'aide du classement"
+        >
+          <Lightbulb size={19} aria-hidden="true" />
+        </button>
       </div>
 
       <div className="standing-accordion">

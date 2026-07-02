@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { CompetitionGroup } from '../../types/football'
@@ -89,12 +89,7 @@ export function GroupStandingTable({ group, variant = 'table' }: GroupStandingTa
 }
 
 function GroupStandingAccordion({ group }: { group: CompetitionGroup }) {
-  const firstStanding = group.standings[0]
-  const [openStandingKey, setOpenStandingKey] = useState(() => getStandingKey(firstStanding))
-
-  useEffect(() => {
-    setOpenStandingKey(getStandingKey(firstStanding))
-  }, [firstStanding])
+  const [openStandingKey, setOpenStandingKey] = useState('')
 
   return (
     <section className="standing-table standing-table--accordion" aria-labelledby={`group-${group.code}`}>

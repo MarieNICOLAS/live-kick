@@ -106,9 +106,8 @@ export function BracketPage() {
       <div className="page-heading">
         <span>
           <GitBranch size={16} aria-hidden="true" />
-          Tableau final
+          Tableau compétition
         </span>
-        <h1>Arbre de la phase finale</h1>
         <p>Suivez les relations entre les matchs et le chemin des vainqueurs vers la finale.</p>
       </div>
 
@@ -260,7 +259,7 @@ function BracketTeamRow({
 
 function buildBracket(footballMatches: FootballMatch[]) {
   const knockoutMatches = footballMatches
-    .filter((footballMatch) => detectRoundKey(footballMatch) !== null)
+    .filter(isBracketMatch)
     .sort((first, second) => getMatchTimestamp(first.matchDate, first.stadiumId) - getMatchTimestamp(second.matchDate, second.stadiumId))
   const matchesById = new Map(knockoutMatches.map((match) => [match.id, match]))
   const rounds = new Map<BracketRoundKey, BracketNode[]>()
@@ -310,6 +309,10 @@ function buildBracket(footballMatches: FootballMatch[]) {
     const left = roundIndex * (cardWidth + roundGap)
 
     roundNodes.forEach((node, index) => {
+      if (!node) {
+        return
+      }
+
       if (roundIndex > 0 && node.sourceKeys.length === 0) {
         const previousRound = rounds.get(roundOrder[roundIndex - 1]) ?? []
         const firstSource = previousRound[index * 2]
@@ -342,8 +345,8 @@ function buildBracket(footballMatches: FootballMatch[]) {
 }
 
 function createNodeFromMatch(match: FootballMatch, roundKey: BracketRoundKey, matchesById: Map<number, FootballMatch>): BracketNode {
-  const homeSourceMatchId = getSourceMatchId(match.homeTeam.name)
-  const awaySourceMatchId = getSourceMatchId(match.awayTeam.name)
+  const homeSourceMatchId = getSourceMatchId(match.homeTeam?.name)
+  const awaySourceMatchId = getSourceMatchId(match.awayTeam?.name)
   const homeSourceMatch = homeSourceMatchId === null ? null : matchesById.get(homeSourceMatchId) ?? null
   const awaySourceMatch = awaySourceMatchId === null ? null : matchesById.get(awaySourceMatchId) ?? null
   const sourceKeys = [homeSourceMatchId, awaySourceMatchId]
@@ -363,7 +366,7 @@ function createNodeFromMatch(match: FootballMatch, roundKey: BracketRoundKey, ma
   }
 }
 
-function createVirtualNode(roundKey: BracketRoundKey, index: number, firstSource: BracketNode, secondSource: BracketNode): BracketNode {
+function createVirtualNode(roundKey: BracketRoundKey, index: number, firstSource: BracketNode | null, secondSource: BracketNode | null): BracketNode {
   return {
     key: `virtual-${roundKey}-${index}`,
     match: null,
@@ -371,13 +374,17 @@ function createVirtualNode(roundKey: BracketRoundKey, index: number, firstSource
     roundKey,
     home: buildVirtualParticipant(firstSource),
     away: buildVirtualParticipant(secondSource),
-    sourceKeys: [firstSource.key, secondSource.key],
+    sourceKeys: [firstSource?.key, secondSource?.key].filter((key): key is string => Boolean(key)),
     left: 0,
     top: 0,
   }
 }
 
-function buildVirtualParticipant(sourceNode: BracketNode): BracketParticipant {
+function buildVirtualParticipant(sourceNode: BracketNode | null): BracketParticipant {
+  if (!sourceNode) {
+    return buildPlaceholderParticipant('Vainqueur à confirmer', null)
+  }
+
   const winner = getWinnerTeam(sourceNode.match)
 
   if (winner) {
@@ -398,7 +405,7 @@ function buildVirtualParticipant(sourceNode: BracketNode): BracketParticipant {
   }
 }
 
-function resolveParticipant(team: TeamSummary, sourceMatchId: number | null, sourceMatch: FootballMatch | null): BracketParticipant {
+function resolveParticipant(team: TeamSummary | null, sourceMatchId: number | null, sourceMatch: FootballMatch | null): BracketParticipant {
   const winner = getWinnerTeam(sourceMatch)
 
   if (winner) {
@@ -409,10 +416,22 @@ function resolveParticipant(team: TeamSummary, sourceMatchId: number | null, sou
     }
   }
 
+  if (!team) {
+    return buildPlaceholderParticipant(sourceMatchId === null ? 'Équipe à confirmer' : `Vainqueur du match ${sourceMatchId}`, sourceMatchId)
+  }
+
   return {
     team,
     sourceMatchId,
     label: getTeamDisplayName(team),
+  }
+}
+
+function buildPlaceholderParticipant(label: string, sourceMatchId: number | null): BracketParticipant {
+  return {
+    team: { id: null, name: label, fifaCode: null, flagUrl: null },
+    sourceMatchId,
+    label,
   }
 }
 
@@ -424,10 +443,18 @@ function getWinnerTeam(match: FootballMatch | null) {
   return match.homeScore > match.awayScore ? match.homeTeam : match.awayTeam
 }
 
-function getSourceMatchId(teamName: string) {
+function getSourceMatchId(teamName: string | null | undefined) {
+  if (!teamName) {
+    return null
+  }
+
   const match = teamName.match(/^(?:Winner Match|Winner M|Vainqueur du match|Vainqueur match|Vainqueur M)\s*(\d+)$/i)
 
   return match ? Number(match[1]) : null
+}
+
+function isBracketMatch(match: FootballMatch | null | undefined): match is FootballMatch {
+  return Boolean(match?.id && match.matchDate && detectRoundKey(match) !== null)
 }
 
 function detectRoundKey(match: FootballMatch): BracketRoundKey | null {
